@@ -60,7 +60,7 @@ const exportToPdf = async () => {
 </script>
 <template>
     <MutedButton @click="exportToPdf" class="flex items-center justify-center hover:bg-neutral-100">
-        <FasFilePdf class="text-locke-red-500 mr-2 text-xl" />
+        <FasFilePdf class="text-red-500 mr-2 text-xl" />
         PDF
     </MutedButton>
 </template>

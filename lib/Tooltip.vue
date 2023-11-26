@@ -24,8 +24,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const slotRef = ref<HTMLInputElement | null>(null)
-const setSlotRef = (el) => {
-  slotRef.value = el;
+const setSlotRef = (el: HTMLInputElement) => {
+  slotRef.value = el
 }
 
 const position = computed(() => {
@@ -207,13 +207,13 @@ const closeOnScroll = () => {
     if (position.value != 'center') close()
 }
 
-useEventListener(slotRef, 'mouseenter', (e) => {
+useEventListener(slotRef, 'mouseenter', () => {
     open()
 })
-useEventListener(slotRef, 'mouseleave', (e) => {
+useEventListener(slotRef, 'mouseleave', () => {
     close()
 })
-useEventListener(slotRef, 'mousedown', (e) => {
+useEventListener(slotRef, 'mousedown', () => {
     if (position.value != 'center') close()
 })
 

@@ -93,7 +93,7 @@ const footerPages = computed(() => {
         <!-- Page buttons-->
         <span v-for="page in footerPages"
             class="px-2"
-            :class="{'bg-locke-red-500 text-white': page == currentPage}"
+            :class="{'bg-red-500 text-white': page == currentPage}"
             @click="navigateTo(page)"
         >
             {{ page }}

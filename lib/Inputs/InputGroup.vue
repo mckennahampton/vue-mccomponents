@@ -1,19 +1,3 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-
-interface Props {
-    iconClass?: string,
-    iconStyle?: string | string[],
-    showTooltip?: boolean,
-    showValidated?: boolean,
-}
-
-const props = withDefaults(defineProps<Props>(), {
-    showTooltip: false,
-    showValidated: false,
-})
-
-</script>
 <template>
     <div class="flex gap-3 items-center inputGroup">
         <div class="relative w-full min-w-min whitespace-nowrap">
@@ -27,7 +11,7 @@ const props = withDefaults(defineProps<Props>(), {
 .inputGroup:has(input:focus) .icon,
 .inputGroup:has(textarea:focus) .icon
 {
-    @apply text-locke-red-500
+    @apply text-red-500
 }
 
 .inputGroup:has(input) label,
@@ -55,7 +39,7 @@ const props = withDefaults(defineProps<Props>(), {
 .inputGroup input:not([type=file]):not([type=checkbox])
 {
     @apply
-    w-full h-10 text-gray-900 border-b-2 border-neutral-400 focus:outline-none focus:border-locke-red-500
+    w-full h-10 text-gray-900 border-b-2 border-neutral-400 focus:outline-none focus:border-red-500
 }
 
 .inputGroup:not(:has(.dp__input)):has(input:not([type=file]):not([type=checkbox])) label, /* <-- :not(:has(.dp__input)) Bypass the datepicker */
