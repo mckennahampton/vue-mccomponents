@@ -14,7 +14,7 @@ export const timestampToLocaleDate = (stamp: string) => {
     return temp.toLocaleDateString()
 }
 
-export function timeDiff(input, summarize = true) {
+export function timeDiff(input: string | Date, summarize = true) {
     //today, now!
     //Get the diff
     input = input instanceof Date ? input : new Date(input)
@@ -22,7 +22,7 @@ export function timeDiff(input, summarize = true) {
     let start = input > now ? new Date() : input
     let end = input > now ? input : new Date()
     let suffix = input > now ? ' from now' : ' ago'
-    let diff = end - start
+    let diff = +(new Date(end)) - +(new Date(start))
 
     //Create numbers for dividing to get hour, minute and second diff
     var units = [1000 * 60 * 60 * 24, 1000 * 60 * 60, 1000 * 60, 1000]
@@ -68,7 +68,6 @@ export function timeDiff(input, summarize = true) {
         }
     }
     if (summarize == true) {
-        let output = []
         if (thisFullYear > 0) {
             return (
                 thisFullYear + " year" + (thisFullYear > 1 ? "s" : "") + suffix

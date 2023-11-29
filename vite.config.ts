@@ -28,6 +28,9 @@ export default defineConfig({
         exclude: ['@vuepic/vue-datepicker']
     },
     build: {
+        manifest: true,
+        minify: true,
+        reportCompressedSize: true,
         lib: {
             entry: resolve(__dirname, 'lib/main.ts'),
             name: 'VueMcComponents',

@@ -10,8 +10,8 @@ import TableToolbar from './TableToolbar/TableToolbar.vue'
 import { type OrderByEntry } from './TableToolbar/Filters/OrderBy.vue'
 import { type LengthAwarePaginator } from '../Types/Laravel/LengthAwarePaginator'
 import {
-    ref, onBeforeMount, onMounted, onUpdated,
-    computed, watch, onBeforeUnmount, useSlots, provide
+    ref, onBeforeMount,
+    computed, watch, useSlots, provide
 } from 'vue'
 import TableRowSkeleton from '../Skeletons/Table/TableRowSkeleton.vue'
 
@@ -240,21 +240,26 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     // *******************************************************************
 
     // Selectable
-    const selected = ref([] as string[])
+    const selected = ref([] as number[])
     const allSelected = computed(() => pageItems.value.filter(item => !item.disabled).length == selected.value.length)
-    const itemIsSelected = (item: any) => selected.value.some(_item => _item == JSON.stringify(item))
-    const selectedItems = computed(() => props.items.filter(item => selected.value.some(_item => _item == JSON.stringify(item))))
+    const itemIsSelected = (item: any) => {
+        let prime = props.items.indexOf(item)
+        return selected.value.some(_prime => _prime == prime)
+    }
+    const selectedItems = computed(() => props.items.filter(item => selected.value.some(_prime => _prime == props.items.indexOf(item))))
     const toggleSelectItem = (item: any) => {
         if (item.disabled) return
-        let index = selected.value.indexOf(JSON.stringify(item))
-        index < -1
-        ? selected.value.splice(index, 1) // De-select
-        : selected.value.push(JSON.stringify(item))
+        let prime = props.items.indexOf(item)
+        selected.value.some(_prime => _prime == prime)
+        ? selected.value.splice(selected.value.indexOf(prime), 1) // De-select
+        : selected.value.push(prime)
     }
-    const deselectAll = () => selected.value.length = 0
+    const deselectAll = () => {
+        selected.value.length = 0
+    }
     const selectAll = () => {
         deselectAll()
-        pageItems.value.filter(item => !item.disabled).forEach(item => selected.value.push(JSON.stringify(item)))
+        pageItems.value.filter(item => !item.disabled).forEach(item => selected.value.push(props.items.indexOf(item)))
     }
     const toggleSelectAll = () => allSelected.value ? deselectAll() : selectAll()
 
@@ -264,6 +269,11 @@ const slots = useSlots() // Used to conditional rendering of the action button s
         provide('allSelected', allSelected)
         provide('toggleSelectItem', toggleSelectItem)
         provide('itemIsSelected', itemIsSelected)
+        provide('deselectAll', deselectAll)
+    })
+
+    watch(selected, () => {
+        console.log(selected.value)
     })
     // *******************************************************************
 
@@ -398,7 +408,7 @@ defineExpose({
 onBeforeMount(() => {
     if (props.rowHandling == 'paginate') {
         resetSort()
-        if (props.selectable && props.uid) {
+        if (props.selectable) {
             deselectAll()
         }
     }
@@ -458,14 +468,12 @@ watch(props, () => {
                             <HeaderElements
                                 :resize="props.resize"
                                 :selectable="props.selectable"
-                                :table-select-uid="props.uid"
                                 :scrollable="props.rowHandling == 'scroll'"
                                 :headers="props.headers"
                                 :sort="props.sort"
                             />
 
-                            <HeaderSelectAll v-if="props.selectable && props.uid"
-                                :table-select-uid="props.uid"
+                            <HeaderSelectAll v-if="props.selectable"
                                 :page-items="pageItems"
                                 :class="{'bg-white': props.rowHandling == 'scroll'}"
                             />
@@ -485,14 +493,16 @@ watch(props, () => {
 
                     <!-- Loading/refreshing placeholder -->
                     <tbody v-else-if="props.loading">
-                        <TableRowSkeleton v-for="index in rowsPerPage"
-                            :cols="props.headers.length + (props.selectable && props.uid ? 1 : 0)"
-                        />
+                        <template v-for="index in rowsPerPage">
+                            <TableRowSkeleton v-if="index"
+                                :cols="props.headers.length + (props.selectable ? 1 : 0)"
+                            />
+                        </template>
                     </tbody>
 
                     <!-- Non-loading empty rows -->
                     <tbody v-else>
-                        <EmptyItemsRow :colspan="(props.selectable && props.uid) ? headers.length + 1 : headers.length" />
+                        <EmptyItemsRow :colspan="(props.selectable) ? headers.length + 1 : headers.length" />
                     </tbody>
                     
                 </table>
@@ -579,7 +589,7 @@ table :deep(tbody tr td:not(.selectButton)) {
 }
 
 table :deep(tbody tr td:not(.selectButton)) {
-    @apply relative border-b-[1px] border-b-neutral-300 last:border-b-0
+    @apply relative border-b-[1px] border-b-neutral-300 last:border-b-0 pt-7 pb-2 md:py-2
 
     /* Desktop */
     md:border-b-0 md:table-cell md:w-auto md:max-w-[150px] lg:max-w-[250px] xl:max-w-[450px]
@@ -589,13 +599,17 @@ table :deep(tbody tr td:not(.selectButton)) {
 table :deep(tr td:not(.selectButton)) {
     @apply
 
-    before:content-[attr(header)] before:relative before:whitespace-nowrap
+    before:content-[attr(header)] before:absolute before:top-0 before:left-0
+    before:whitespace-nowrap before:pl-2 before:pt-2
     before:w-full before:leading-tight before:text-black
     before:font-bold before:text-[13px]
 
     /* Desktop */
     md:before:hidden
     print:before:hidden
+}
+.dark table :deep(tr td:not(.selectButton))::before {
+    @apply text-neutral-400
 }
 
 

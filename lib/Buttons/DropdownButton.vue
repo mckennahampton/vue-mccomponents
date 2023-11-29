@@ -169,18 +169,18 @@
         windowScrollX.value = window.scrollX
     }
 
-    const closeOnOutsideClick = (e) => {
+    const closeOnOutsideClick = (e: MouseEvent) => {
         let insideScrollbar = false
-        if (e.target.closest('[data-dropdown-content="'+buttonUid+'"]')) {
+        if ((e.target as HTMLElement).closest('[data-dropdown-content="'+buttonUid+'"]')) {
             const dropdownScrollbarLeft = dropdown.value ? dropdown.value.clientWidth + dropdownLeft.value : 0
             const dropdownScrollbarRight = dropdown.value ? dropdown.value.offsetWidth + dropdownLeft.value : 0
             insideScrollbar = dropdownScrollbarLeft < e.clientX && e.clientX < dropdownScrollbarRight
         }
 
         if (
-            !e.target.closest('[data-dropdown-button="'+buttonUid+'"]') // Make sure it's not the root button
-            && (!e.target.closest('[data-dropdown-content="'+buttonUid+'"]') || !e.target.closest('[data-dropdown-button]:not([data-dropdown-button="'+buttonUid+'"])')) // Make sure it's not a nested dropdown button
-            && !e.target.closest('[data-dropdown-content="'+buttonUid+'"] input') // Allow inputs in the dropdown
+            !(e.target as HTMLElement).closest('[data-dropdown-button="'+buttonUid+'"]') // Make sure it's not the root button
+            && (!(e.target as HTMLElement).closest('[data-dropdown-content="'+buttonUid+'"]') || !(e.target as HTMLElement).closest('[data-dropdown-button]:not([data-dropdown-button="'+buttonUid+'"])')) // Make sure it's not a nested dropdown button
+            && !(e.target as HTMLElement).closest('[data-dropdown-content="'+buttonUid+'"] input') // Allow inputs in the dropdown
             && !insideScrollbar // Allow scrollbar dragging inside dropdown
         ) {
             closeDropdown()
@@ -240,7 +240,7 @@
         >
             <slot name="button" :open="open" :toggleDropdown="toggleDropdown"></slot>
             <span v-if="showIcon" class="h-4 w-4 flex items-center justify-center transition ease-in-out duration-100" :class="[open ? rotationClass : '']">
-                <FasCaretDown :class="{'rotate-180': ( placement == 'top' || placement.includes('top-') )}" />
+                <FasCaretDown class="fill-black dark:fill-white" :class="{'rotate-180': ( placement == 'top' || placement.includes('top-') )}" />
             </span>
         </button>
         <Teleport to="#dropdowns">
@@ -250,7 +250,7 @@
                     :id="props.dropdownId"
                     ref="dropdown"
                     :data-dropdown-content="buttonUid"
-                    class="absolute z-30 flex flex-col items-stretch bg-white text-black text-sm shadow-xl max-w-[90vw] xs:max-w-min"
+                    class="absolute z-30 flex flex-col items-stretch bg-white dark:bg-zinc-950 text-sm shadow-xl max-w-[90vw] xs:max-w-min"
                     :class="[props.dropdownClasses]"
                     :style="{
                         top: dropdownTop + 'px',

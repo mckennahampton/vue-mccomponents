@@ -3,5 +3,5 @@
  * from the author object nested in the item object
 */
 export function deepValue(path: string, obj: object): any {
-    return path.split('.').reduce((p, c) => p && p?[c] || '' : '', obj)
+    return path.split('.').reduce((p: any, c) => p && p[c] || '', obj)
 }

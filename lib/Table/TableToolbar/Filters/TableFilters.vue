@@ -53,8 +53,7 @@ onBeforeMount(() => {
 })
 
 const filterSelected = (metric: string, value: string) => {
-    let temp = value ?? 'all'
-
+    
     // Set all values to false except the target
     filters.value
     ?.find(filter => filter.metric == metric)
@@ -119,6 +118,7 @@ defineExpose({
         <!-- <VR /> -->
         <InputGroup class="max-w-1/2 md:max-w-1/3 lg:max-w-1/4">
             <template #input>
+                <!-- @vue-ignore-->
                 <Select
                     button-classes="pb-1 pt-5 min-w-[175px]"
                     :items="filter.values"

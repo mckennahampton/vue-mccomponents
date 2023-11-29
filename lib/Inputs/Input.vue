@@ -32,7 +32,7 @@ watch(props, () => {
     <input
         ref="input"
         :class="emptyClass"
-        class="w-full h-10 text-gray-900 border-b-2 border-neutral-400 focus:outline-none focus:border-red-500"
+        class="w-full h-10 border-b-2 border-neutral-400 focus:outline-none focus:border-red-500  bg-transparent"
         v-model="inputValue"
     />
 </template>

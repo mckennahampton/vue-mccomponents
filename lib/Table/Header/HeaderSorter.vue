@@ -33,8 +33,8 @@ const sort = (metric: string) => {
             <span v-if="sorting && sortingMetric == props.header.sort"
                 class="absolute top-[50%] transform -translate-y-[50%] -right-[20px]"
             >
-                <FasArrowUpWideShort v-if="sortAsc" class="text-neutral-500"/>
-                <FasArrowDownShortWide v-else class="text-neutral-500"/>
+                <FasArrowDownShortWide v-if="sortAsc" class="fill-neutral-500 dark:fill-neutral-400"/>
+                <FasArrowUpWideShort v-else class="fill-neutral-500 dark:fill-neutral-400"/>
             </span>
         </TransitionFade>
     </span>

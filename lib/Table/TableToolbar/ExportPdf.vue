@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject } from 'vue'
 import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import * as autoTable from 'jspdf-autotable'
 import FasFilePdf from '../../Icons/FasFilePdf.vue'
 import { toBase64 } from '../../Utilities/fileHelpers'
 import MutedButton from '../../Buttons/MutedButton.vue'
@@ -23,11 +23,12 @@ const exportToPdf = async () => {
     }
 
     const doc = new jsPDF()
-    autoTable(doc, {
+    autoTable.default(doc, {
         html: `#${tableUid}`,
         headStyles: {
             fillColor: '#000000'
         },
+        //@ts-ignore
         didDrawPage: function (data) {
             // Header
             doc.setTextColor(40)

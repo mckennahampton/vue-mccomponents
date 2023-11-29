@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useEventListener } from '@vueuse/core'
 import { useElementBounding } from '@vueuse/core'
-import { ref, computed, reactive, watch } from 'vue'
+import { ref, computed, reactive, watch, type ComponentPublicInstance } from 'vue'
 import TransitionFade from './Transitions/TransitionFade.vue'
 import { resolveXClip, resolveYClip } from './Utilities/clipping'
 
@@ -23,8 +23,8 @@ const props = withDefaults(defineProps<Props>(), {
     elementTag: 'span'
 })
 
-const slotRef = ref<HTMLInputElement | null>(null)
-const setSlotRef = (el: HTMLInputElement) => {
+const slotRef = ref<Element | ComponentPublicInstance | null>(null)
+const setSlotRef = (el: Element | ComponentPublicInstance | null) => {
   slotRef.value = el
 }
 
@@ -73,6 +73,7 @@ const isSlotReady = computed(() => {
 })
 watch(slotRef, () => {
     if (isSlotReady.value) {
+        //@ts-ignore
         parentRect.rect = useElementBounding(slotRef)
     }
 })
@@ -206,13 +207,15 @@ const close = () => {
 const closeOnScroll = () => {
     if (position.value != 'center') close()
 }
-
+//@ts-ignore
 useEventListener(slotRef, 'mouseenter', () => {
     open()
 })
+//@ts-ignore
 useEventListener(slotRef, 'mouseleave', () => {
     close()
 })
+//@ts-ignore
 useEventListener(slotRef, 'mousedown', () => {
     if (position.value != 'center') close()
 })

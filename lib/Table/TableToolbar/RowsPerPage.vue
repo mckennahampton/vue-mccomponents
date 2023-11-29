@@ -54,7 +54,7 @@ const updated = (length: number) => {
     <DropdownButton
         :placement="'bottom'"
         show-icon
-        :button-classes="['hover:bg-neutral-100 !px-2 whitespace-nowrap !font-normal !px-0']"
+        :button-classes="['hover:bg-neutral-100 dark:hover:bg-neutral-900 !px-2 whitespace-nowrap !font-normal !px-0']"
         :dropdown-classes="'whitespace-nowrap w-full border-x-2 border-y-2 border-neutral-300'"
     >
         <template #button>

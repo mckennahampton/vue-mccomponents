@@ -12,7 +12,6 @@ interface Props {
 const props = defineProps<Props>()
 
 const selectable = inject('selectable') as boolean
-const selectableUid = inject('selectableUid') as string
 const currentPage = inject('currentPage') as ComputedRef
 const toggleSelectItem = inject('toggleSelectItem') as Function
 const itemIsSelected = inject('itemIsSelected') as Function
@@ -24,7 +23,7 @@ const itemIsSelected = inject('itemIsSelected') as Function
     const setMobileHeaderPrefixes = () => {
         rowRefs.value.forEach(row => {
             const tds = row.querySelectorAll('td')
-            const loopLength = (selectable && selectableUid) ? (tds.length - 1) : tds.length
+            const loopLength = selectable ? (tds.length - 1) : tds.length
             for (var i = 0; i < loopLength; i++) {
                 tds[i].setAttribute('header', props.headers[i].caption)
             }
@@ -50,12 +49,12 @@ const itemIsSelected = inject('itemIsSelected') as Function
         >
             <tr v-for="item in props.items"
                 :class="[
-                    {'even:!bg-cyan-100 odd:!bg-cyan-200': selectable && selectableUid && itemIsSelected(item)},
+                    {'even:!bg-cyan-100 dark:even:!bg-cyan-800 odd:!bg-cyan-200 dark:odd:!bg-cyan-900': selectable && itemIsSelected(item)},
                     {'[&>*]:disabled': item.disabled},
                     props.rowClasses
                 ]"
-                class="odd:bg-neutral-100 transition-all relative"
-                @dblclick="item.disabled ? null : toggleSelectItem(item.id)"
+                class="odd:bg-black dark:odd:bg-white odd:!bg-opacity-5 transition-all relative"
+                @dblclick="item.disabled ? null : toggleSelectItem(item)"
                 ref="rowRefs"
                 :key="item.id"
             >
@@ -64,7 +63,7 @@ const itemIsSelected = inject('itemIsSelected') as Function
                 <slot name="rows" :item="item" />
                     
                 <!-- Select button -->
-                <RowSelect v-if="selectable && selectableUid" :item="item" />
+                <RowSelect v-if="selectable" :item="item" />
 
                 <!-- Overlay for disabled items -->
                 <Tooltip v-if="item.disabled"

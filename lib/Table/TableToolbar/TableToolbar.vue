@@ -5,18 +5,16 @@ import Accordion from '../../Accordion/Accordion.vue'
 import MutedButton from '../../Buttons/MutedButton.vue'
 import OrderBy, { type OrderByEntry } from './Filters/OrderBy.vue'
 import AccordionItem from '../../Accordion/AccordionItem.vue'
-import DropdownButton from '../../Buttons/DropdownButton.vue'
 import PaginateButtons from '../PaginateButtons.vue'
 import ExportCsv from './ExportCsv.vue'
 import ExportPdf from './ExportPdf.vue'
-import { ref, useSlots, inject, onMounted, type ComputedRef } from 'vue'
+import { ref, useSlots, inject, onMounted, type ComputedRef, watch } from 'vue'
 import PrintTable from './PrintTable.vue'
 import TransitionFade from '../../Transitions/TransitionFade.vue'
 import RowsPerPage from './RowsPerPage.vue'
 import TableDates from './Filters/TableDates.vue'
 import { type LengthAwarePaginator } from '../../Types/Laravel/LengthAwarePaginator'
 import TableFilters, { type Filter} from './Filters/TableFilters.vue'
-import FasBars from '../../Icons/FasBars.vue'
 import FasFilter from '../../Icons/FasFilter.vue'
 
 interface Props {
@@ -33,7 +31,6 @@ const props = defineProps<Props>()
 
 const emit = defineEmits([
     'resetSort',
-    'deselecetAll',
     'navigateTo',
     'update:filtered',
     'update:rowsPerPage',
@@ -46,9 +43,8 @@ const filtered = inject('filtered') as Boolean
 const updateQuickFilter = inject('updateQuickFilter') as Function
 const rowsPerPage = inject('rowsPerPage') as ComputedRef
 const orderByEntries = inject('orderByEntries') as OrderByEntry[]
-const selectableUid = inject('selectableUid') as string
 
-const deselectAll = inject('deselecetAll') as Function
+const deselectAll = inject('deselectAll') as Function
 
 const textFilter = ref('')
 
@@ -61,8 +57,15 @@ const filter = () => {
         updateQuickFilter(textFilter.value)
         emit('resetSort')
     }
+    else {
+        textFilter.value = ''
+        updateQuickFilter(textFilter.value)
+    }
     deselectAll()
 }
+watch(textFilter, () => {
+    filter()
+})
 
 const resetFilter = () => {
     textFilter.value = ''
@@ -93,118 +96,60 @@ onMounted(() => {
     <div class="flex flex-col items-start justify-center w-full mb-20 relative">
         <template v-if="props.showToolbar">
             <div 
-                :class="[
-                    {'disabled': props.loading}
-                ]"
-                class="relative flex justify-between items-center bottom-0 left-0 w-full bg-white select-none py-3 print:hidden"
+                :class="[{'disabled': props.loading}]"
+                class="relative flex justify-between items-center bottom-0 left-0 w-full select-none py-3 print:hidden"
                 ref="paginateCon"
             >
                 <Accordion class="w-full">
                     <AccordionItem
                         button-toggle-only
-                        item-classes="!justify-start gap-2"
+                        item-classes="!justify-center md:!justify-start gap-2"
                         :show-icon="Boolean(props.showDatePicker || props.filters)"
                         :panel-classes="{'!z-[0]': props.loading}"
                     >
                         <template #header="{toggle, isOpen}">
-                            <div class="flex gap-2">
 
-                                <!-- Mobile housing for toolbar -->
-                                <DropdownButton
-                                    class="hidden md:block"
-                                    :placement="'bottom'"
-                                    :dropdown-id="'mobilePaginateDropdown'"
-                                    :dropdown-classes="'sm:flex-row gap-3 p-4 border-4'"
-                                    :offset="40"
-                                    show-icon
+                            <!-- Row Options Selector -->
+                            <div class="flex w-full max-w-[500px] md:max-w-none items-center justify-between md:justify-start gap-5 mb-5 md:mb-0">
+                                <!-- Quick Filter -->
+                                <Input placeholder="Filter Visible Rows..." v-model="textFilter" class="w-[200px] md:w-auto" />
+                                <MutedButton v-if="filtered"
+                                    @click="resetFilter"
+                                    class="italic whitespace-nowrap text-cyan-500"
                                 >
-                                    <template #button>
-                                        <FasBars />
-                                    </template>
-                                    <template #dropdown>
-                                        <Input placeholder="Filter Visible Rows..." v-model="textFilter" @input="filter" class="w-[200px] md:w-auto" />
-                                        <MutedButton v-if="filtered"
-                                            @click="resetFilter"
-                                            class="italic whitespace-nowrap text-cyan-500"
-                                        >
-                                            Reset
-                                        </MutedButton>
+                                    Reset
+                                </MutedButton>
 
-                                        <VR />
+                                <VR />
 
-                                        <!-- Rows per page button -->
-                                        <RowsPerPage
-                                            :external-pagination="props.externalPagination"
-                                            v-model:rows-per-page="rowsPerPage"
-                                        />
+                                <!-- Rows per page button -->
+                                <RowsPerPage
+                                    :external-pagination="props.externalPagination"
+                                    v-model:rows-per-page="rowsPerPage"
+                                />
 
-                                        <!-- Export buttons -->
-                                        <template v-if="props.showExport">
-                                            <VR />
-                                            <ExportCsv :report-title="props.reportTitle" />
-                                            <ExportPdf :report-title="props.reportTitle" />
-                                            <PrintTable />
-                                        </template>
-
-                                        <!-- Filter bar toggle -->
-                                        <template v-if="props.showDatePicker || props.filters">
-                                            <VR />
-                                            <span
-                                                class="flex items-center justify-center gap-2 hover:cursor-pointer hover:bg-neutral-100 py-1 px-2"
-                                                :class="[{'bg-neutral-100': isOpen}]"
-                                                @click="toggle"
-                                            >
-                                                <FasFilter />
-                                                Filters
-                                            </span>
-                                        </template>
-                                    </template>
-                                </DropdownButton>
-
-                                <!-- Row Options Selector -->
-                                <!-- <Teleport to="#mobilePaginateDropdown" :disabled="md"> -->
-                                <span class="md:hidden">
-                                    <!-- Quick Filter -->
-                                    <Input placeholder="Filter Visible Rows..." v-model="textFilter" @input="filter" class="w-[200px] md:w-auto" />
-                                    <MutedButton v-if="filtered"
-                                        @click="resetFilter"
-                                        class="italic whitespace-nowrap text-cyan-500"
-                                    >
-                                        Reset
-                                    </MutedButton>
-
+                                <!-- Export buttons -->
+                                <template v-if="props.showExport">
                                     <VR />
+                                    <ExportCsv :report-title="props.reportTitle" />
+                                    <ExportPdf :report-title="props.reportTitle" />
+                                    <PrintTable />
+                                </template>
 
-                                    <!-- Rows per page button -->
-                                    <RowsPerPage
-                                        :external-pagination="props.externalPagination"
-                                        v-model:rows-per-page="rowsPerPage"
-                                    />
-
-                                    <!-- Export buttons -->
-                                    <template v-if="props.showExport">
-                                        <VR />
-                                        <ExportCsv :report-title="props.reportTitle" />
-                                        <ExportPdf :report-title="props.reportTitle" />
-                                        <PrintTable />
-                                    </template>
-
-                                    <!-- Filter bar toggle -->
-                                    <template v-if="props.showDatePicker || props.filters">
-                                        <VR />
-                                        <span
-                                            class="flex items-center justify-center gap-2 hover:cursor-pointer hover:bg-neutral-100 py-1 px-2"
-                                            :class="[{'bg-neutral-100': isOpen}]"
-                                            @click="toggle"
-                                        >
-                                            <FasFilter />
-                                            Filters
-                                        </span>
-                                    </template>
-                                </span>
-                                <!-- </Teleport> -->
-
+                                <!-- Filter bar toggle -->
+                                <template v-if="props.showDatePicker || props.filters">
+                                    <VR />
+                                    <span
+                                        class="flex items-center justify-center gap-2 hover:cursor-pointer hover:bg-neutral-100 py-1 px-2"
+                                        :class="[{'bg-neutral-100': isOpen}]"
+                                        @click="toggle"
+                                    >
+                                        <FasFilter />
+                                        Filters
+                                    </span>
+                                </template>
                             </div>
+
                         </template>
 
                         <!-- Filter toolbar -->

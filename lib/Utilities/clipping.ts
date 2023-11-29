@@ -1,4 +1,4 @@
-export function resolveXClip(left, elWidth, scrollX = 0)
+export function resolveXClip(left: number, elWidth: number, scrollX = 0)
 {
     // Right clip
     if ((left + elWidth) > (window.innerWidth + scrollX)) {
@@ -16,7 +16,7 @@ export function resolveXClip(left, elWidth, scrollX = 0)
     }
 }
 
-export function resolveYClip(top, elHeight, scrollY = 0)
+export function resolveYClip(top: number, elHeight: number, scrollY = 0)
 {
     // Bottom clip
     if ((top + elHeight) > (window.innerHeight + scrollY)) {

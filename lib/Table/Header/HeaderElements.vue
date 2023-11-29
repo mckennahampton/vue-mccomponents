@@ -13,7 +13,6 @@ export interface Header {
 interface Props {
     resize: boolean,
     selectable: boolean,
-    tableSelectUid?: string,
     classes?: string | object | any[]
     scrollable: boolean,
     headers: Header[],
@@ -24,7 +23,7 @@ const props = defineProps<Props>()
 const ths = ref([])
 
 const isNotSelectHeader = (index: number) => {
-    return (props.selectable && props.tableSelectUid) ? true : (index + 1) < props.headers.length
+    return props.selectable ? true : (index + 1) < props.headers.length
 }
 
 </script>

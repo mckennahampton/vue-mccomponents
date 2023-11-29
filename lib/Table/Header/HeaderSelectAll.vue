@@ -5,7 +5,6 @@ import FasCircleCheck from '../../Icons/FasCircleCheck.vue'
 
 interface Props {
     pageItems: any[],
-    tableSelectUid: string,
 }
 const props = defineProps<Props>()
 
@@ -19,7 +18,7 @@ const allSelected = inject('allSelected') as ComputedRef
         class="hover:cursor-pointer text-center !px-1 print:invisible"
         data-th-select
     >
-        <FasCircleCheck v-if="pageItems.length > 0 && allSelected" class="mx-2"/>
-        <FarCircleCheck v-else class="mx-2"/>
+        <FasCircleCheck v-if="props.pageItems.length > 0 && allSelected" class="mx-2 fill-black dark:fill-white"/>
+        <FarCircleCheck v-else class="mx-2 fill-black dark:fill-neutral-500"/>
     </th>
 </template>

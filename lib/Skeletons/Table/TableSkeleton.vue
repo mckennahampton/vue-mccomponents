@@ -14,7 +14,9 @@ const props = withDefaults(defineProps<Props>(), {
     <table class="w-full animate-pulse">
         <TableHeaderSkeleton :cols="props.cols" />
         <tbody>
-            <TableRowSkeleton v-for="index in 10" :cols="props.cols"/>
+            <template v-for="index in 10">
+                <TableRowSkeleton v-if="index" :cols="props.cols"/>
+            </template>
         </tbody>
     </table>
 </template>

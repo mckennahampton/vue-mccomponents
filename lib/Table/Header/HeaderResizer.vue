@@ -85,7 +85,7 @@ onUpdated(() => {
         class="absolute top-0 -right-[6px] flex items-stretch hover:cursor-col-resize group px-1 z-[2]"
         :style="{ height: resizeBarHeight }"
         @click.stop
-        @mousedown="(e) => resizeMouseDown(e, index)"
+        @mousedown="(e) => resizeMouseDown(e, props.index + 1)"
     >
         <span class="w-[2px]"></span>
         <span class="w-[2px] group-hover:bg-neutral-300"></span>

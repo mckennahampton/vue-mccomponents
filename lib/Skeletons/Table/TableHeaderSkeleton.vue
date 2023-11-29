@@ -9,7 +9,7 @@ const props = defineProps<Props>()
 <template>
     <thead>
         <th v-for="index in props.cols">
-            <div class="bg-gray-300 px-3 py-3 my-2"></div>
+            <div v-if="index" class="bg-gray-300 px-3 py-3 my-2"></div>
         </th>
     </thead>
 </template>

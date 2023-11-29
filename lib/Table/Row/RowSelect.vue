@@ -16,15 +16,15 @@ const itemIsSelected = inject('itemIsSelected') as Function
 <template>
 
     <td
-        @click="toggleSelectItem"
+        @click="toggleSelectItem(props.item)"
         class="selectButton hover:cursor-pointer text-black text-center !px-1 print:invisible"
         data-td-select
     >
-        <PrimaryButton class="w-full hidden md:block" :class="[{'bg-neutral-500': itemIsSelected(props.item)}]">
+        <PrimaryButton class="w-full block md:hidden" :class="[{'bg-neutral-500': itemIsSelected(props.item)}]">
             {{ itemIsSelected(props.item) ? 'Unselect' : 'Select' }}
         </PrimaryButton>
-        <FasCircleCheck v-if="itemIsSelected(props.item)" class="mx-2 block md:hidden"/>
-        <FarCircleCheck v-else class="mx-2 block md:hidden"/>
+        <FasCircleCheck v-if="itemIsSelected(props.item)" class="mx-2 hidden md:block fill-black dark:fill-white"/>
+        <FarCircleCheck v-else class="mx-2 hidden md:block fill-black dark:fill-neutral-500"/>
 
     </td>
 

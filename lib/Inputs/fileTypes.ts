@@ -1,0 +1,7 @@
+export const words = ['doc', 'docm', 'docx', 'rtf']
+export const archives = ['7z', 'zip', 'rar', 'gz', 'tar']
+export const videos = ['mp4', 'avi', 'mov', 'wmv', 'mkv']
+export const images = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg']
+export const audios = ['mp3', 'flac', 'wav', 'aac', 'aiff', 'alac', 'ogg']
+export const excels = ['xlsx', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xls', 'xlt']
+export const powerpoints = ['pptx', 'pptm', 'ppt', 'potx', 'potm', 'pot', 'ppsx', 'ppsm', 'pps', 'ppam', 'ppa']
