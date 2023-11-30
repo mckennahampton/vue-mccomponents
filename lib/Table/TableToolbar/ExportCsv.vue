@@ -34,7 +34,13 @@ const exportToCsv = () => {
         const cells = row.querySelectorAll('td:not([data-th-select])')
 
         //@ts-ignore
-        csvRows.push(Array.from(cells).map(cell => cell.innerText.trim() ).join(','))
+        // csvRows.push(Array.from(cells).map(cell => cell.innerText.trim() ).join(','))
+
+        csvRows.push(Array.from(cells).map(cell => {
+            //@ts-ignore
+            const cellText = cell.innerText.trim();
+            return cellText.includes(',') ? `"${cellText}"` : cellText;
+        }).join(','));
     }
 
     let data = csvRows.join("\n").replace(/(^\[)|(\]$)/gm, "")
@@ -57,8 +63,8 @@ const exportToCsv = () => {
 
 </script>
 <template>
-    <MutedButton @click="exportToCsv" class="flex items-center justify-center hover:bg-neutral-100">
-        <FasFileCsv class="text-green-500 mr-2 text-xl" />
+    <MutedButton @click="exportToCsv" class="flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-900 text-black dark:text-white">
+        <FasFileCsv class="fill-green-500 mr-2 text-xl" />
         CSV
     </MutedButton>
 </template>

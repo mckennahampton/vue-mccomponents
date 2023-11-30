@@ -56,7 +56,7 @@ const itemIsSelected = inject('itemIsSelected') as Function
                 class="odd:bg-black dark:odd:bg-white odd:!bg-opacity-5 transition-all relative"
                 @dblclick="item.disabled ? null : toggleSelectItem(item)"
                 ref="rowRefs"
-                :key="item.id"
+                :key="item.key ?? item.id ?? item.uid ?? JSON.stringify(item)"
             >
 
                 <!-- Main row content -->

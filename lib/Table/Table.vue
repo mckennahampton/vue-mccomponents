@@ -24,7 +24,7 @@ export interface ExternalPaginationFetchArgs {
     end?: Date
 }
 
-interface Header {
+export interface Header {
     caption: string,
     sort?: string,
     filter?: string,
@@ -54,7 +54,6 @@ interface Props {
     sort?: boolean,
     resize?: boolean,
     selectable?: boolean,
-    uid?: string,
     scrollableMaxHeight?: number,
     rowClasses?: string,
     loading?: boolean,
@@ -240,26 +239,46 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     // *******************************************************************
 
     // Selectable
+    const itemsWithUid = ref(props.items.map(item => ({
+        ...item,
+        [tableUid + '_uid']: uid()
+    })))
+
     const selected = ref([] as number[])
     const allSelected = computed(() => pageItems.value.filter(item => !item.disabled).length == selected.value.length)
-    const itemIsSelected = (item: any) => {
-        let prime = props.items.indexOf(item)
-        return selected.value.some(_prime => _prime == prime)
-    }
-    const selectedItems = computed(() => props.items.filter(item => selected.value.some(_prime => _prime == props.items.indexOf(item))))
+    const itemIsSelected = (item: any) => selected.value.some(item_uid => item_uid == item[tableUid + '_uid'])
+
+    const selectedItems = computed(() => {
+        console.log({
+            items: itemsWithUid.value.filter(item => itemIsSelected(item)),
+            mapped: itemsWithUid.value.filter(item => itemIsSelected(item)).map(item => {
+                const o = {...item}
+                if (tableUid + '_uid' in o) delete o[tableUid + '_uid']
+                return o
+            })
+        })
+
+        // Remove the uid key in the exposed selectedItems array
+        return itemsWithUid.value.filter(item => itemIsSelected(item)).map(item => {
+            const o = {...item}
+            if (tableUid + '_uid' in o) delete o[tableUid + '_uid']
+            return o
+        })
+    })
+
     const toggleSelectItem = (item: any) => {
         if (item.disabled) return
-        let prime = props.items.indexOf(item)
-        selected.value.some(_prime => _prime == prime)
-        ? selected.value.splice(selected.value.indexOf(prime), 1) // De-select
-        : selected.value.push(prime)
+
+        selected.value.some(item_uid => item_uid == item[tableUid + '_uid'])
+        ? selected.value.splice(selected.value.indexOf(item[tableUid + '_uid']), 1) // De-select
+        : selected.value.push(item[tableUid + '_uid'])
     }
     const deselectAll = () => {
         selected.value.length = 0
     }
     const selectAll = () => {
         deselectAll()
-        pageItems.value.filter(item => !item.disabled).forEach(item => selected.value.push(props.items.indexOf(item)))
+        pageItems.value.filter(item => !item.disabled).forEach(item => selected.value.push(item[tableUid + '_uid']))
     }
     const toggleSelectAll = () => allSelected.value ? deselectAll() : selectAll()
 
@@ -272,9 +291,9 @@ const slots = useSlots() // Used to conditional rendering of the action button s
         provide('deselectAll', deselectAll)
     })
 
-    watch(selected, () => {
-        console.log(selected.value)
-    })
+    watch(props, () => deselectAll())
+    watch(currentPage, () => deselectAll())
+    watch(rowsPerPage, () => deselectAll())
     // *******************************************************************
 
     // Resizing
@@ -298,6 +317,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     // Exports
     onBeforeMount(() => {
         provide('localLogoUrl', props.localLogoUrl)
+        provide('headers', props.headers)
     })
 
 //#endregion
@@ -307,12 +327,13 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 //
 // The key to this is the sortingMetric.value.split('.').reduce((p,c)=>p&&p[c]||'', a), where we iterate over the .-spaced string to
 // find the nested value we are looking for
+
 const pageItems = computed(() => {
     let items;
 
     // Filter the items if applicable
     if (filtered.value) {
-        items = props.items.filter((item) => {
+        items = itemsWithUid.value.filter((item) => {
             return Object.keys(item).some((key) => {
                 if (key == 'hash' || key == 'icon' || key == 'path') return false
                 return item[key]
@@ -328,12 +349,12 @@ const pageItems = computed(() => {
     else {
         if (props.externalPagination || props.rowHandling == 'scroll')
         {
-            items = props.items
+            items = itemsWithUid.value
         }
         else {
             let start = (currentPage.value - 1) * rowsPerPage.value
             let end = start + rowsPerPage.value
-            items = props.items.slice(start, end)
+            items = itemsWithUid.value.slice(start, end)
         }
     }
 

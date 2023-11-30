@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Table from '../lib/Table/Table.vue'
+import { ref } from 'vue'
 
 interface Post {
     id: number,
@@ -32,20 +33,47 @@ const items = [
     {"id":183,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-13T00:54:11.000000Z","updated_at":"2023-11-13T00:54:11.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
     {"id":184,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-13T00:54:19.000000Z","updated_at":"2023-11-13T00:54:19.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
     {"id":185,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-13T01:01:41.000000Z","updated_at":"2023-11-13T01:01:41.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
-    {"id":186,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null}
+    {"id":186,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
+    {"id":187,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
+    {"id":188,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
+    {"id":189,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
+    {"id":190,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
+    {"id":191,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
+    {"id":192,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
+    {"id":193,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null}
 ] as Post[]
+
+const tableRef = ref(null)
 
 </script>
 <template>
     <div class="w-full h-full flex items-center justify-center text-black dark:text-white p-10">
-        <Table
-            :toolbar="true"
-            paginate
-            sort
-            resize
-            selectable
-            :items="items"
-            :uid="'posts'"
+        <Table paginate sort resize selectable show-date-picker show-export :toolbar="true" ref="tableRef" :items="items"
+            :filters="[
+                {
+                    metric: 'published',
+                    values: [
+                        { title: 'Submitted', value: 'submitted' },
+                        { title: 'Approved', value: 'approved' },
+                        { title: 'Denied', value: 'denied'}
+                    ],
+                },
+                {
+                    metric: 'reason',
+                    values: [
+                        { title: 'Discontinued', value: 'discontinued'},
+                        { title: 'Damaged', value: 'damaged' },
+                        { title: 'Promo', value: 'promo' },
+                        { title: 'Other', value: 'other' }
+                    ]
+                },
+            ]"
+            :order-by="[
+                { value: 'created_at', title: 'Created' },
+                { value: 'status', title: 'Status' },
+                { value: 'whse', title: 'Whse' },
+                { value: 'operator_id', title: 'SX Operator' },
+            ]"
             :headers="[
                 { caption: 'Title', sort: 'title' },
                 { caption: 'Slug', sort: 'slug' },

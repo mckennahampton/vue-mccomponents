@@ -8,8 +8,8 @@ const printPage = () => {
 
 </script>
 <template>
-    <MutedButton @click="printPage" class="flex items-center justify-center hover:bg-neutral-100">
-        <FasPrint class="text-neutral-500 mr-2 text-xl" />
+    <MutedButton @click="printPage" class="flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-900 text-black dark:text-white">
+        <FasPrint class="fill-neutral-500 mr-2 text-xl" />
         Print
     </MutedButton>
 </template>

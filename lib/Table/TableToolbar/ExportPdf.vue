@@ -5,6 +5,7 @@ import * as autoTable from 'jspdf-autotable'
 import FasFilePdf from '../../Icons/FasFilePdf.vue'
 import { toBase64 } from '../../Utilities/fileHelpers'
 import MutedButton from '../../Buttons/MutedButton.vue'
+import { type Header } from '../Table.vue'
 
 interface Props {
     reportTitle?: string,
@@ -13,6 +14,7 @@ const props = defineProps<Props>()
 
 const tableUid = inject('tableUid') as string
 const localLogoUrl = inject('localLogoUrl') as string
+const headers = inject('headers') as Header[]
 
 const exportToPdf = async () => {
 
@@ -28,7 +30,7 @@ const exportToPdf = async () => {
         headStyles: {
             fillColor: '#000000'
         },
-        //@ts-ignore
+        columns: headers.map(header => ({ header: header.caption })), // This will strip out the "Selected" column if necessary
         didDrawPage: function (data) {
             // Header
             doc.setTextColor(40)
@@ -60,8 +62,8 @@ const exportToPdf = async () => {
 
 </script>
 <template>
-    <MutedButton @click="exportToPdf" class="flex items-center justify-center hover:bg-neutral-100">
-        <FasFilePdf class="text-red-500 mr-2 text-xl" />
+    <MutedButton @click="exportToPdf" class="flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-900 text-black dark:text-white">
+        <FasFilePdf class="fill-red-500 mr-2 text-xl" />
         PDF
     </MutedButton>
 </template>

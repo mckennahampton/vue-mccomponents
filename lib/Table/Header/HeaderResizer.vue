@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUpdated, inject, type Ref } from 'vue'
+import { useElementSize } from '@vueuse/core'
+import { reactive, inject, type Ref } from 'vue'
 
 interface Props {
     index: number,
@@ -53,7 +54,6 @@ const resizeMouseMove = (e: MouseEvent) => {
         }
         resizeState.curTh.style.width = (resizeState.curThWidth + diff)+'px'
     }
-    setResizeBarHeight()
 }
 
 const resetResizeState = () => {
@@ -69,21 +69,12 @@ const resetResizeState = () => {
 }
 
 const tableRef = inject('tableRef') as Ref<HTMLElement>
-const resizeBarHeight = ref('0')
-const setResizeBarHeight = () => {
-    resizeBarHeight.value = tableRef.value ? tableRef.value.offsetHeight+'px' : '0px'
-}
-onMounted(() => {
-    setResizeBarHeight()
-})
-onUpdated(() => {
-    setResizeBarHeight()
-})
+const { height: tableHeight } = useElementSize(tableRef)
 </script>
 <template>
     <span
         class="absolute top-0 -right-[6px] flex items-stretch hover:cursor-col-resize group px-1 z-[2]"
-        :style="{ height: resizeBarHeight }"
+        :style="{ height: tableHeight + 'px' }"
         @click.stop
         @mousedown="(e) => resizeMouseDown(e, props.index + 1)"
     >
