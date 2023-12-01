@@ -21,6 +21,7 @@ const emit = defineEmits([
 const updateRowsPerPage = inject('updateRowsPerPage') as Function
 const totalItemsLength = inject('totalItemsLength') as ComputedRef
 const navigateTo = inject('navigateTo') as Function
+const dark = inject('dark') as boolean
 
 const rowsPerPageOptions = ref([
     { caption: '10', value: 10, current: true },
@@ -54,7 +55,7 @@ const updated = (length: number) => {
     <DropdownButton
         :placement="'bottom'"
         show-icon
-        :button-classes="['hover:bg-neutral-100 dark:hover:bg-neutral-900 !px-2 whitespace-nowrap !font-normal !px-0']"
+        :button-classes="[`${dark ? 'hover:bg-neutral-900' : 'hover:bg-neutral-100'} !px-2 whitespace-nowrap !font-normal !px-0`]"
         :dropdown-classes="'whitespace-nowrap w-full border-x-2 border-y-2 border-neutral-300'"
     >
         <template #button>

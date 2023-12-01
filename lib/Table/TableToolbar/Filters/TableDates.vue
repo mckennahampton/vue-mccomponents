@@ -13,6 +13,7 @@ const startDate = inject('startDate') as ComputedRef
 const endDate = inject('endDate') as ComputedRef
 const updateStartDate = inject('updateStartDate') as Function
 const updateEndDate = inject('updateEndDate') as Function
+const dark = inject('dark') as ComputedRef
 
 const resetDates = () => {
     updateEndDate(new Date)
@@ -26,28 +27,22 @@ defineExpose({
 </script>
 <template>
     <InputGroup>
-        <template #input>
-            <DatePicker
-                v-model="startDate"
-                :max-date="endDate"
-            />
-        </template>
-        <template #label>
-            <label>Start Date</label>
-        </template>
+        <DatePicker
+            v-model="startDate"
+            :max-date="endDate"
+            label="Start Date"
+            :dark="dark"
+        />
     </InputGroup>
 
     <InputGroup>
-        <template #input>
-            <DatePicker
-                v-model="endDate"
-                :max-date="props.maxDate ? new Date(props.maxDate) : new Date()"
-                :min-date="startDate"
-            />
-        </template>
-        <template #label>
-            <label>End Date</label>
-        </template>
+        <DatePicker
+            v-model="endDate"
+            :max-date="props.maxDate ? new Date(props.maxDate) : new Date()"
+            :min-date="startDate"
+            label="End Date"
+            :dark="dark"
+        />
     </InputGroup>
 
 </template>

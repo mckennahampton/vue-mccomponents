@@ -16,12 +16,13 @@ const filtered = inject('filtered') as ComputedRef
 const navigateTo = inject('navigateTo') as Function
 const rowsPerPage = inject('rowsPerPage') as ComputedRef
 const currentPage = inject('currentPage') as ComputedRef
-const pageItemsLength = inject('pageItemsLength') as ComputedRef
 const totalItemsLength = inject('totalItemsLength') as ComputedRef
+const filteredItems = inject('filteredItems') as ComputedRef
+const dark = inject('dark') as boolean
 
 const totalPageCount = computed(() => {
     return filtered.value
-    ? pageItemsLength.value > 0 ? Math.ceil(pageItemsLength.value / rowsPerPage.value ) : 1
+    ? filteredItems.value.length > 0 ? Math.ceil(filteredItems.value.length / rowsPerPage.value ) : 1
     : totalItemsLength.value > 0 ? Math.ceil(totalItemsLength.value  / rowsPerPage.value ) : 1
 })
 
@@ -75,32 +76,37 @@ const footerPages = computed(() => {
             {'justify-end mt-5': !props.fixed},
         ]"
     >
+
         <!-- First -->
-        <Tooltip :body="'First Page'" :disable="currentPage == 1" :position="'top'" :class="{'disabled': currentPage == 1 || filtered || props.loading }">
+        <Tooltip :body="'First Page'" :disable="currentPage == 1" :position="'top'" :class="{'disabled': currentPage == 1 || props.loading }">
             <FasBackwardStep @click="navigateTo(1)" class="paginate-icon" />
         </Tooltip>
 
         <!-- Previous -->
-        <Tooltip :body="'Previous Page'" :disable="currentPage == 1" :position="'top'" :class="{'disabled': currentPage == 1 || filtered || props.loading  }">
+        <Tooltip :body="'Previous Page'" :disable="currentPage == 1" :position="'top'" :class="{'disabled': currentPage == 1 || props.loading  }">
             <FasChevronLeft @click="navigateTo(currentPage - 1)" class="paginate-icon" />
         </Tooltip>
 
         <!-- Page buttons-->
         <span v-for="page in footerPages"
             class="px-2"
-            :class="[{'bg-red-500 text-white': page == currentPage}, {'disabled': filtered || props.loading }]"
+            :class="[
+                {'bg-neutral-900 text-white': page == currentPage && !dark},
+                {'bg-neutral-300 text-black': page == currentPage && dark},
+                {'disabled': props.loading }
+            ]"
             @click="navigateTo(page)"
         >
             {{ page }}
         </span>
 
         <!-- Next -->
-        <Tooltip :body="'Next Page'" :disable="currentPage == totalPageCount" :position="'top'" :class="{'disabled': currentPage == totalPageCount || filtered || props.loading  }">
+        <Tooltip :body="'Next Page'" :disable="currentPage == totalPageCount" :position="'top'" :class="{'disabled': currentPage == totalPageCount || props.loading  }">
             <FasChevronRight @click="navigateTo(currentPage + 1)" class="paginate-icon" />
         </Tooltip>
 
         <!-- Last -->
-        <Tooltip :body="'Last Page'" :disable="currentPage == totalPageCount" :position="'top'" :class="{'disabled': currentPage == totalPageCount || filtered || props.loading  }">
+        <Tooltip :body="'Last Page'" :disable="currentPage == totalPageCount" :position="'top'" :class="{'disabled': currentPage == totalPageCount || props.loading  }">
             <FasForwardStep @click="navigateTo(totalPageCount)" class="paginate-icon" />
         </Tooltip>
 
@@ -111,7 +117,7 @@ const footerPages = computed(() => {
 .paginate-icon {
     @apply fill-black
 }
-.paginate-icon {
+.dark .paginate-icon {
     @apply fill-neutral-400
 }
 

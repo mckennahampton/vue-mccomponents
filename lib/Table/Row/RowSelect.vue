@@ -11,6 +11,7 @@ const props = defineProps<Props>()
 
 const toggleSelectItem = inject('toggleSelectItem') as (payload: MouseEvent) => void
 const itemIsSelected = inject('itemIsSelected') as Function
+const dark = inject('dark') as boolean
 
 </script>
 <template>
@@ -23,8 +24,14 @@ const itemIsSelected = inject('itemIsSelected') as Function
         <PrimaryButton class="w-full block md:hidden" :class="[{'bg-neutral-500': itemIsSelected(props.item)}]">
             {{ itemIsSelected(props.item) ? 'Unselect' : 'Select' }}
         </PrimaryButton>
-        <FasCircleCheck v-if="itemIsSelected(props.item)" class="mx-2 hidden md:block fill-black dark:fill-white"/>
-        <FarCircleCheck v-else class="mx-2 hidden md:block fill-black dark:fill-neutral-500"/>
+        <FasCircleCheck v-if="itemIsSelected(props.item)"
+            :class="[dark ? 'fill-white' : 'fill-black']"
+            class="mx-2 hidden md:block"
+        />
+        <FarCircleCheck v-else
+            :class="[dark ? 'fill-neutral-500' : 'fill-black']"
+            class="mx-2 hidden md:block"
+        />
 
     </td>
 

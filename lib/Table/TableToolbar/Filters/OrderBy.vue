@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Select from '../../../Inputs/Select.vue'
 import InputGroup from '../../../Inputs/InputGroup.vue'
-import { ref, inject, computed, onBeforeMount } from 'vue'
+import { ref, inject, computed, onBeforeMount, type ComputedRef } from 'vue'
 
 export interface OrderByEntry {
     value: string,
@@ -12,6 +12,7 @@ export interface OrderByEntry {
 
 const orderByEntries = inject('orderByEntries') as OrderByEntry[]
 const updateLaravelFormattedOrderBy = inject('updateLaravelFormattedOrderBy') as Function
+const dark = inject('dark') as ComputedRef
 const entries = ref(orderByEntries)
 
 const dirEntries = ref([
@@ -37,7 +38,7 @@ onBeforeMount(() => {
         entries.value.unshift({
             title: 'None',
             value: 'none',
-            classes: 'mb-2 border-y-2 border-neutral-300'
+            classes: `mb-2 border-y-2 ${dark.value ? 'border-neutral-700' : 'border-neutral-300'}`
         })
     }
 
@@ -115,30 +116,28 @@ defineExpose({
 </script>
 <template>
     <InputGroup>
-        <template #input>
-            <div class="flex items-center justify-between gap-5">
-                <Select
-                    button-classes="pb-1 pt-5 min-w-[175px]"
-                    :items="entries"
-                    :model-value="entries.find(e => e.active)?.value"
-                    @update:model-value="val => entrySelected(val)"
-                    searchable
-                    ref="orderByRef"
-                />
-                <Select
-                    button-classes="pb-1 pt-5 min-w-[175px]"
-                    empty-placeholder="Direction"
-                    :items="dirEntries"
-                    @update:model-value="val => dirSelected(val)"
-                    :class="[{'disabled': entries.some(entry => entry.active && entry.value == 'none')}]"
-                    ref="dirRef"
-                    v-model="defaultDir"
-                />
-            </div>
-        </template>
-        <template #label>
-            <label class="!-translate-y-8 capitalize">Order By</label>
-        </template>
+        <div class="flex items-center justify-between gap-5">
+            <Select
+                button-classes="pb-1 pt-5 min-w-[175px]"
+                :items="entries"
+                :model-value="entries.find(e => e.active)?.value"
+                @update:model-value="val => entrySelected(val)"
+                searchable
+                ref="orderByRef"
+                label="Order By"
+                :dark="dark"
+            />
+            <Select
+                button-classes="pb-1 pt-5 min-w-[175px]"
+                empty-placeholder="Direction"
+                :items="dirEntries"
+                @update:model-value="val => dirSelected(val)"
+                :class="[{'disabled': entries.some(entry => entry.active && entry.value == 'none')}]"
+                ref="dirRef"
+                v-model="defaultDir"
+                :dark="dark"
+            />
+        </div>
     </InputGroup>
 </template>
 <style scoped>

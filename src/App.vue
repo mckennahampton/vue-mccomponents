@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Table from '../lib/Table/Table.vue'
-import { ref } from 'vue'
+import { ref, onBeforeMount } from 'vue'
 
 interface Post {
     id: number,
@@ -45,10 +45,27 @@ const items = [
 
 const tableRef = ref(null)
 
+const isDark = ref(true)
+const toggleDark = () => {
+    isDark.value = !isDark.value
+    if (isDark.value) {
+        document.querySelector('html')?.classList.add('dark')
+    }
+    else {
+        document.querySelector('html')?.classList.remove('dark')
+    }
+}
+
+onBeforeMount(() => {
+    document.querySelector('html')?.classList.add('dark')
+})
 </script>
 <template>
-    <div class="w-full h-full flex items-center justify-center text-black dark:text-white p-10">
-        <Table paginate sort resize selectable show-date-picker show-export :toolbar="true" ref="tableRef" :items="items"
+    <div class="w-full h-full flex flex-col items-center justify-between text-black dark:text-white p-10">
+        <div class="w-full self-start">
+            <div class="p-4 m-3" @click="toggleDark">Toggle Dark</div>
+        </div>
+        <Table class="justify-self-center" paginate sort resize selectable show-date-picker show-export :toolbar="true" ref="tableRef" :items="items" :dark="isDark"
             :filters="[
                 {
                     metric: 'published',

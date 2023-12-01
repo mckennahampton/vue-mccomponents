@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import Select from '../../../Inputs/Select.vue'
 import InputGroup from '../../../Inputs/InputGroup.vue'
-import { ref, computed, inject, onBeforeMount } from 'vue'
+import { ref, computed, inject, onBeforeMount, type ComputedRef } from 'vue'
+
 
 interface FilterValue {
     value: string | number | boolean | null,
@@ -25,6 +26,7 @@ const props = defineProps<Props>()
 
 const filters = ref(props.filters)
 const filterRefs = ref([])
+const dark = inject('dark') as ComputedRef
 
 onBeforeMount(() => {
     filters.value?.forEach(filter => {
@@ -34,7 +36,7 @@ onBeforeMount(() => {
             filter.values.unshift({
                 title: 'All',
                 value: 'all',
-                classes: 'mb-2 border-y-2 border-neutral-300',
+                classes: `mb-2 border-y-2 ${dark.value ? 'border-neutral-700' : 'border-neutral-300'}`
             })
         }
 
@@ -113,25 +115,19 @@ defineExpose({
 
 </script>
 <template>
-    <template v-for="filter in filters">
+    <InputGroup v-for="filter in filters">
+        <Select
+            class="max-w-1/2 md:max-w-1/3 lg:max-w-1/4"
+            button-classes="pb-1 pt-5 min-w-[175px]"
+            :items="filter.values"
+            :model-value="filter.values.find(val => val.active)?.value?.toString()"
+            @update:model-value="val => filterSelected(filter.metric, val)"
+            :searchable="filter.searchable"
+            ref="filterRefs"
+            :label="filter.label ?? filter.metric"
+            label-style="capitalize"
+            :dark="dark"
+        />
+    </InputGroup>
 
-        <!-- <VR /> -->
-        <InputGroup class="max-w-1/2 md:max-w-1/3 lg:max-w-1/4">
-            <template #input>
-                <!-- @vue-ignore-->
-                <Select
-                    button-classes="pb-1 pt-5 min-w-[175px]"
-                    :items="filter.values"
-                    :model-value="filter.values.find(val => val.active)?.value?.toString()"
-                    @update:model-value="val => filterSelected(filter.metric, val)"
-                    :searchable="filter.searchable"
-                    ref="filterRefs"
-                />
-            </template>
-            <template #label>
-                <label class="!-translate-y-8 capitalize">{{ filter.label ?? filter.metric }}</label>
-            </template>
-        </InputGroup>
-
-    </template>
 </template>

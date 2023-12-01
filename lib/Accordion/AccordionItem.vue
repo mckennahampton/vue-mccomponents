@@ -55,7 +55,7 @@ onBeforeMount(() => {
     <li class="relative whitespace-nowrap">
         <div @click="toggleCheck" class="flex justify-between items-center" :class="[isOpen && openClasses, props.itemClasses, {'hover:cursor-pointer': !props.buttonToggleOnly}]">
             <slot name="header" :toggle="toggle" :isOpen="isOpen"/>
-            <FasCaretDown v-if="props.showIcon" :class="{'rotate-180': isOpen}" class="fa-fw transition-all hover:cursor-pointer" @click="toggle" />
+            <FasCaretDown v-if="props.showIcon" :class="{'rotate-180': isOpen}" class="fa-fw transition-all hover:cursor-pointer fill-black dark:fill-neutral-100" @click="toggle" />
         </div>
         <template v-if="slots.panel">
             <TransitionExpand>

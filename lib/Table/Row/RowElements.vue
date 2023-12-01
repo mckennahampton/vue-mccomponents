@@ -15,6 +15,7 @@ const selectable = inject('selectable') as boolean
 const currentPage = inject('currentPage') as ComputedRef
 const toggleSelectItem = inject('toggleSelectItem') as Function
 const itemIsSelected = inject('itemIsSelected') as Function
+const dark = inject('dark') as boolean
 
 //#region Mobile Styling
 
@@ -49,11 +50,13 @@ const itemIsSelected = inject('itemIsSelected') as Function
         >
             <tr v-for="item in props.items"
                 :class="[
-                    {'even:!bg-cyan-100 dark:even:!bg-cyan-800 odd:!bg-cyan-200 dark:odd:!bg-cyan-900': selectable && itemIsSelected(item)},
+                    {'even:!bg-cyan-200 odd:!bg-cyan-300 !bg-opacity-100': selectable && itemIsSelected(item) && !dark},
+                    {'odd:!bg-cyan-800 even:!bg-cyan-900': selectable && itemIsSelected(item) && dark},
                     {'[&>*]:disabled': item.disabled},
+                    dark ? 'odd:bg-white odd:bg-opacity-5' : 'odd:bg-black odd:bg-opacity-5',
                     props.rowClasses
                 ]"
-                class="odd:bg-black dark:odd:bg-white odd:!bg-opacity-5 transition-all relative"
+                class="transition-all relative"
                 @dblclick="item.disabled ? null : toggleSelectItem(item)"
                 ref="rowRefs"
                 :key="item.key ?? item.id ?? item.uid ?? JSON.stringify(item)"

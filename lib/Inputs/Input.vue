@@ -1,38 +1,76 @@
 <script setup lang="ts">
+import uid from '../Utilities/uid'
 import { ref, watch, computed } from 'vue'
 
-interface Props {
-    inputInitialValue?: string | number
-    modelValue: string | number | object | null
-}
-const props = defineProps<Props>()
+const props = defineProps<{
+    inputInitialValue?: string | number,
+    modelValue?: string | number | object,
+    label?: string,
+    labelStyles?: any,
+}>()
+
 
 const emit = defineEmits(["update:modelValue"]);
 
 const input = ref(null)
 const inputValue = ref(props.modelValue ?? null)
+const inputUid = uid()
 
 const emptyClass = computed(() => {
     return inputValue.value ? 'not-empty' : 'empty'
 })
+
 watch(inputValue, () => {
     emit('update:modelValue', inputValue.value)
 })
 
 
 watch(props, () => {
-    props.modelValue
-    ? inputValue.value = props.modelValue
-    : inputValue.value = null
+    if(props.modelValue) {
+        inputValue.value = props.modelValue
+    }
+    else {
+        inputValue.value = null
+    }
+})
+
+defineExpose({
+    input
 })
 
 </script>
-
 <template>
+    <label v-if="props.label"
+        class="absolute left-0 top-[50%] transition-all delay-100 transform -translate-y-[50%] z-[2] hover:cursor-text font-bold text-gray-600 text-sm"
+        :for="inputUid"
+    >
+        {{ props.label }}
+    </label>
     <input
+        v-bind="$attrs"
         ref="input"
         :class="emptyClass"
-        class="w-full h-10 border-b-2 border-neutral-400 focus:outline-none focus:border-red-500  bg-transparent"
+        class="w-full h-10 text-black dark:text-white border-b-2 border-b-neutral-400 dark:border-neutral-700 bg-transparent focus:outline-none focus:border-red-500"
         v-model="inputValue"
+        :id="inputUid"
     />
 </template>
+<style scoped>
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Read-only */ input[readonly] { @apply pointer-events-none text-center !text-black }
+
+
+/* Floating label styles */
+label:has(~ input:focus),
+label:has(~ input:placeholder-shown),
+label:has(~ input.not-empty)
+{
+    @apply transform -translate-y-10 text-black left-0 delay-0 
+}
+
+</style>

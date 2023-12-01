@@ -5,9 +5,10 @@ import DropdownButton from '../Buttons/DropdownButton.vue'
 
 interface Item {
     columns?: Array<string|number|Boolean>,
-    title?: string|number|Boolean,
-    value: string|number|Boolean,
-    classes?: any | any[]
+    title?: string,
+    value: string | number | boolean | null,
+    classes?: any | any[],
+    active?: boolean,
 }
 
 type Layout = 'list' | 'table' | 'slot'
@@ -24,12 +25,16 @@ interface Props {
     dropdownClasses?: object | string | string[],
     buttonClasses?: object | string | string[],
     searchable?: boolean,
-    emptyPlaceholder?: string
+    emptyPlaceholder?: string,
+    label?: string,
+    labelStyle?: string | object | any[],
+    dark?: boolean,
 }
 
 const props = withDefaults(defineProps<Props>(), {
     layout: 'list',
     searchable: false,
+    dark: false
 })
 const emit = defineEmits(["update:modelValue"])
 
@@ -68,7 +73,7 @@ const select = (item: Item | any) => {
         selected.value = item
     }
     open.value = false
-    filter.value = 'null'
+    filter.value = ''
 };
 
 const reset = () => {
@@ -83,7 +88,8 @@ const filteredItems = computed(() => {
     ? props.items.filter((item) => {
             return Object.keys(item).some((key) => {
                 if (key == 'hash' || key == 'icon' || key == 'path') return false
-                return item?[key].toString().toLowerCase().includes(filter.value.toString().toLowerCase()) : item
+                //@ts-ignore
+                return item[key].toString().toLowerCase().includes(filter.value.toString().toLowerCase())
             })
         })
     : props.items
@@ -95,17 +101,27 @@ defineExpose({
 
 </script>
 <template>
+     <label v-if="props.label"
+        class="absolute text-sm top-0 origin-[0] px-2 left-1 -translate-y-6 -translate-x-2"
+        :class="[
+            props.labelStyle,
+            dark ? 'text-white' : 'text-black'
+        ]"
+    >
+        {{ props.label }}
+    </label>
     <DropdownButton
+        v-bind="$attrs"
         show-icon
         :placement="props.placement ?? 'bottom'"
         :dropdown-classes="[props.dropdownClasses, 'border-[1px] border-neutral-500 max-h-[400px] w-full min-w-min bg-white overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent text-black']"
-        :button-classes="[props.buttonClasses, 'border-b-2 border-neutral-400 w-full justify-between !font-normal']"
+        :button-classes="[props.buttonClasses, `border-b-2 ${dark ? 'border-neutral-700' : 'border-neutral-400'} w-full justify-between !font-normal`]"
     >
         <template #button>
             <div v-if="props.optional" @click="reset" class="absolute bottom-full right-0 text-black italic py-1 hover:cursor-pointer">Reset</div>
             <div 
                 class="select-input"
-                :class="[{'italic text-neutral-400': !selected}]"
+                :class="[{'italic text-neutral-400': !selected || selected == 'none' || selected == 'all'}]"
                 ref=placeholder
             >
                 {{ selectedPlaceholder }}
@@ -136,8 +152,14 @@ defineExpose({
                     <div class="flex flex-col w-full">
                         <div v-for="item in filteredItems"
                             @click="select(item)"
-                            class="flex text-base justify-start px-2 py-1 hover:bg-neutral-100 hover:cursor-pointer"
-                            :class="[{'bg-neutral-200 font-bold': selected == item.value}, item.classes]"
+                            class="flex text-base justify-start px-2 py-1   hover:cursor-pointer"
+                            :class="[
+                                dark ? 'text-neutral-200 hover:bg-neutral-800' : 'text-neutral-950 hover:bg-neutral-300',
+                                {'font-bold': selected == item.value},
+                                {'bg-neutral-900': selected == item.value && dark},
+                                {'bg-neutral-200': selected == item.value && !dark},
+                                item.classes
+                            ]"
                         >
                             {{ item.title ?? item.value }}
                         </div>

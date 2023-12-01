@@ -16,6 +16,7 @@ const sortingMetric = inject('sortingMetric') as ComputedRef
 const toggleSortDir = inject('toggleSortDir') as Function
 const updateSorting = inject('updateSorting') as Function
 const udpateSortingMetric = inject('updateSortingMetric') as Function
+const dark = inject('dark') as boolean
 
 const sort = (metric: string) => {
     udpateSortingMetric(metric)
@@ -33,8 +34,12 @@ const sort = (metric: string) => {
             <span v-if="sorting && sortingMetric == props.header.sort"
                 class="absolute top-[50%] transform -translate-y-[50%] -right-[20px]"
             >
-                <FasArrowDownShortWide v-if="sortAsc" class="fill-neutral-500 dark:fill-neutral-400"/>
-                <FasArrowUpWideShort v-else class="fill-neutral-500 dark:fill-neutral-400"/>
+                <FasArrowDownShortWide v-if="sortAsc"
+                    :class="[dark ? 'fill-neutral-400' : 'fill-neutral-500']"
+                />
+                <FasArrowUpWideShort v-else
+                    :class="[dark ? 'fill-neutral-400' : 'fill-neutral-500']"
+                />
             </span>
         </TransitionFade>
     </span>

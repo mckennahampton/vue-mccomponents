@@ -63,7 +63,8 @@ interface Props {
     reportTitle?: string,
     showExport?: boolean,
     orderBy?: OrderByEntry[],
-    localLogoUrl?: string
+    localLogoUrl?: string,
+    dark?: boolean,
 }
 //#endregion
 
@@ -73,6 +74,13 @@ const props = withDefaults(defineProps<Props>(), {
     externalPagination: false,
     showDatePicker: false,
     showExport: false,
+    dark: false
+})
+
+const isDark = ref(props.dark)
+watch(props, () => isDark.value = props.dark)
+onBeforeMount(() => {
+    provide('dark', isDark)
 })
 
 const emit = defineEmits([
@@ -191,7 +199,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     })
     // *******************************************************************
 
-    // Larave order by entries
+    // Laravel order by entries
     interface LaravelFormattedOrderBy {
         metric: string,
         dir: 'asc' | 'desc'
@@ -327,35 +335,33 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 //
 // The key to this is the sortingMetric.value.split('.').reduce((p,c)=>p&&p[c]||'', a), where we iterate over the .-spaced string to
 // find the nested value we are looking for
-
+const filteredItems = computed(() => {
+    return !filtered.value
+    ? itemsWithUid.value
+    : itemsWithUid.value.filter((item) => {
+        return Object.keys(item).some((key) => {
+            if (key == 'hash' || key == 'icon' || key == 'path') return false
+            return item[key]
+            ? item[key].toString().toLowerCase().includes(quickFilter.value.toString().toLowerCase())
+            : props.headers.some(header => {
+                return header.filter
+                ? deepValue(header.filter, item).toString().toLowerCase().includes(quickFilter.value.toString().toLowerCase())
+                : false
+            });
+        })
+    })
+})
 const pageItems = computed(() => {
     let items;
 
-    // Filter the items if applicable
-    if (filtered.value) {
-        items = itemsWithUid.value.filter((item) => {
-            return Object.keys(item).some((key) => {
-                if (key == 'hash' || key == 'icon' || key == 'path') return false
-                return item[key]
-                ? item[key].toString().toLowerCase().includes(quickFilter.value.toString().toLowerCase())
-                : props.headers.some(header => {
-                    return header.filter
-                    ? deepValue(header.filter, item).toString().toLowerCase().includes(quickFilter.value.toString().toLowerCase())
-                    : false
-                });
-            })
-        })
+    if (!props.externalPagination && props.rowHandling != 'scroll')
+    {
+        let start = (currentPage.value - 1) * rowsPerPage.value
+        let end = start + rowsPerPage.value
+        items = filteredItems.value.slice(start, end)
     }
     else {
-        if (props.externalPagination || props.rowHandling == 'scroll')
-        {
-            items = itemsWithUid.value
-        }
-        else {
-            let start = (currentPage.value - 1) * rowsPerPage.value
-            let end = start + rowsPerPage.value
-            items = itemsWithUid.value.slice(start, end)
-        }
+        items = filteredItems.value
     }
 
     // Sort the items if applicable
@@ -380,8 +386,9 @@ const pageItems = computed(() => {
     }
     return items
 })
+
 onBeforeMount(() => {
-    provide('pageItemsLength', pageItems.value.length)
+    provide('filteredItems', filteredItems)
 })
 
 const navigateTo = (page: number) => {
@@ -456,7 +463,6 @@ watch(props, () => {
 
 </script>
 <template>
-
     <TableToolbar
         :paginate="props.rowHandling == 'paginate'"
         :show-toolbar="props.toolbar"
@@ -629,9 +635,9 @@ table :deep(tr td:not(.selectButton)) {
     md:before:hidden
     print:before:hidden
 }
-.dark table :deep(tr td:not(.selectButton))::before {
+/* .dark table :deep(tr td:not(.selectButton))::before {
     @apply text-neutral-400
-}
+} */
 
 
 /* #region Row Transitions */

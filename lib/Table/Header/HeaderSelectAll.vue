@@ -8,6 +8,8 @@ interface Props {
 }
 const props = defineProps<Props>()
 
+const dark = inject('dark') as boolean
+
 const toggleSelectAll = inject('toggleSelectAll') as (payload: MouseEvent) => void
 const allSelected = inject('allSelected') as ComputedRef
 
@@ -18,7 +20,13 @@ const allSelected = inject('allSelected') as ComputedRef
         class="hover:cursor-pointer text-center !px-1 print:invisible"
         data-th-select
     >
-        <FasCircleCheck v-if="props.pageItems.length > 0 && allSelected" class="mx-2 fill-black dark:fill-white"/>
-        <FarCircleCheck v-else class="mx-2 fill-black dark:fill-neutral-500"/>
+        <FasCircleCheck v-if="props.pageItems.length > 0 && allSelected"
+            class="mx-2"
+            :class="[dark ? 'fill-white' : 'fill-black']"
+        />
+        <FarCircleCheck v-else
+            class="mx-2"
+            :class="[dark ? 'fill-neutral-500' : 'fill-black']"
+        />
     </th>
 </template>

@@ -2,23 +2,27 @@
 // Custom transition from: https://markus.oberlehner.net/blog/transition-to-height-auto-with-vue/
 
 function enter(element: HTMLElement) {
-    const width = getComputedStyle(element).width;
+    const width = getComputedStyle(element).width
 
-    element.style.width = width;
-    element.style.position = 'absolute';
-    element.style.visibility = 'hidden';
-    element.style.height = 'auto';
+    element.style.width = width
+    element.style.position = 'absolute'
+    element.style.visibility = 'hidden'
+    element.style.height = 'auto'
 
-    const height = getComputedStyle(element).height;
+    const height = getComputedStyle(element).height
 
-    element.style.width = ''
-    element.style.position = ''
-    element.style.visibility = ''
-    element.style.height = ''
+    //@ts-ignore
+    element.style.width = null
+    //@ts-ignore
+    element.style.position = null
+    //@ts-ignore
+    element.style.visibility = null
+    //@ts-ignore
+    element.style.height = 0
 
     // Force repaint to make sure the
     // animation is triggered correctly.
-    getComputedStyle(element).height;
+    getComputedStyle(element).height
 
     // Trigger the animation.
     // We use `requestAnimationFrame` because we need
@@ -26,31 +30,34 @@ function enter(element: HTMLElement) {
     // painting after setting the `height`
     // to `0` in the line above.
     requestAnimationFrame(() => {
-        element.style.height = height;
-    });
+        element.style.height = height
+    })
+
 }
 
 function afterEnter(element: HTMLElement) {
-    element.style.height = 'auto';
+    element.style.height = 'auto'
 }
 
 function leave(element: HTMLElement) {
-    const height = getComputedStyle(element).height;
+    const height = getComputedStyle(element).height
     
-    element.style.height = height;
+    element.style.height = height
 
     // Force repaint to make sure the
     // animation is triggered correctly.
-    getComputedStyle(element).height;
+    getComputedStyle(element).height
 
     requestAnimationFrame(() => {
-    element.style.height = ''
-    });
+        //@ts-ignore
+        element.style.height = 0
+    })
+
 }
 </script>
 <template>
 
-    <!--@vue-ignore-->
+    <!-- @vue-ignore-->
     <transition
         name="expand"
         @enter="enter"
@@ -70,6 +77,7 @@ function leave(element: HTMLElement) {
     .expand-enter,
     .expand-leave-to {
         height: 0;
+        box-sizing: content-box;
     }
 
     /* Browser optimization */

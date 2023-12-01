@@ -16,6 +16,7 @@ import TableDates from './Filters/TableDates.vue'
 import { type LengthAwarePaginator } from '../../Types/Laravel/LengthAwarePaginator'
 import TableFilters, { type Filter} from './Filters/TableFilters.vue'
 import FasFilter from '../../Icons/FasFilter.vue'
+import FasCaretDown from '../../Icons/FasCaretDown.vue'
 
 interface Props {
     showToolbar: boolean,
@@ -43,6 +44,7 @@ const filtered = inject('filtered') as Boolean
 const updateQuickFilter = inject('updateQuickFilter') as Function
 const rowsPerPage = inject('rowsPerPage') as ComputedRef
 const orderByEntries = inject('orderByEntries') as OrderByEntry[]
+const dark = inject('dark') as boolean
 
 const deselectAll = inject('deselectAll') as Function
 
@@ -103,8 +105,8 @@ onMounted(() => {
                 <Accordion class="w-full">
                     <AccordionItem
                         button-toggle-only
+                        :show-icon="false"
                         item-classes="!justify-center md:!justify-start gap-2"
-                        :show-icon="Boolean(props.showDatePicker || props.filters)"
                         :panel-classes="{'!z-[0]': props.loading}"
                     >
                         <template #header="{toggle, isOpen}">
@@ -140,12 +142,24 @@ onMounted(() => {
                                 <template v-if="props.showDatePicker || props.filters">
                                     <VR />
                                     <span
-                                        class="flex items-center justify-center gap-2 hover:cursor-pointer hover:bg-neutral-100 py-1 px-2"
-                                        :class="[{'bg-neutral-100': isOpen}]"
+                                        class="flex items-center justify-center gap-2 hover:cursor-pointer py-1 px-2"
+                                        :class="[
+                                            {'bg-neutral-800': isOpen && dark},
+                                            {'bg-neutral-100': isOpen && !dark},
+                                            dark ? 'hover:bg-neutral-800' : 'hover:bg-neutral-100'
+                                        ]"
                                         @click="toggle"
                                     >
-                                        <FasFilter />
+                                        <FasFilter :class="[dark ? 'fill-neutral-100' : 'fill-black']" />
                                         Filters
+                                        <FasCaretDown
+                                            :class="[
+                                                {'rotate-180': isOpen},
+                                                dark ? 'fill-neutral-100' : 'fill-black'
+                                            ]"
+                                            class="fa-fw transition-all hover:cursor-pointer"
+                                            @click="toggle"
+                                        />
                                     </span>
                                 </template>
                             </div>
@@ -154,7 +168,7 @@ onMounted(() => {
 
                         <!-- Filter toolbar -->
                         <template #panel v-if="props.showDatePicker || props.filters">
-                            <div class="flex gap-3 items-center justify-between w-full py-5 px-8 border-l-2 shadow-inner mt-3">
+                            <div class="flex gap-3 items-center justify-between w-full py-5 px-8 border-l-2 shadow-inner mt-3" :class="[dark ? 'border-neutral-800' : 'border-neutral-400']">
                                 <div class="flex flex-wrap gap-10 items-center justify-start">
                                     <span class="flex items-center justify-between gap-8">
                                         <TableDates v-if="props.showDatePicker"
@@ -176,7 +190,14 @@ onMounted(() => {
 
                                 <div class="flex flex-col h-full gap-3 items-center justify-center">
                                     <!--@vue-ignore-->
-                                    <MutedButton @click="props.loading ? null : navigateTo(1)" class="bg-neutral-200 font-bold" :class="[{'disabled': props.loading}]">
+                                    <MutedButton
+                                        @click="props.loading ? null : navigateTo(1)"
+                                        class="font-bold"
+                                        :class="[
+                                            {'disabled': props.loading },
+                                            dark ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-neutral-200'
+                                        ]"
+                                    >
                                         Apply
                                     </MutedButton>
                                     <span @click="resetFilters" class="text-cyan-500 italic hover:cursor-pointer">Reset Filters</span>

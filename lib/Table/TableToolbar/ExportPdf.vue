@@ -15,6 +15,7 @@ const props = defineProps<Props>()
 const tableUid = inject('tableUid') as string
 const localLogoUrl = inject('localLogoUrl') as string
 const headers = inject('headers') as Header[]
+const dark = inject('dark') as boolean
 
 const exportToPdf = async () => {
 
@@ -62,7 +63,11 @@ const exportToPdf = async () => {
 
 </script>
 <template>
-    <MutedButton @click="exportToPdf" class="flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-900 text-black dark:text-white">
+    <MutedButton
+        @click="exportToPdf"
+        :class="[dark ? 'hover:bg-neutral-900 text-white' : 'hover:bg-neutral-100 text-black']"
+        class="flex items-center justify-center"
+    >
         <FasFilePdf class="fill-red-500 mr-2 text-xl" />
         PDF
     </MutedButton>

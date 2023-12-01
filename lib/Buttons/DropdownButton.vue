@@ -171,7 +171,8 @@
 
     const closeOnOutsideClick = (e: MouseEvent) => {
         let insideScrollbar = false
-        if ((e.target as HTMLElement).closest('[data-dropdown-content="'+buttonUid+'"]')) {
+        if ((e.target as HTMLElement).closest('[data-dropdown-content="'+buttonUid+'"]'))
+        {
             const dropdownScrollbarLeft = dropdown.value ? dropdown.value.clientWidth + dropdownLeft.value : 0
             const dropdownScrollbarRight = dropdown.value ? dropdown.value.offsetWidth + dropdownLeft.value : 0
             insideScrollbar = dropdownScrollbarLeft < e.clientX && e.clientX < dropdownScrollbarRight
@@ -182,7 +183,8 @@
             && (!(e.target as HTMLElement).closest('[data-dropdown-content="'+buttonUid+'"]') || !(e.target as HTMLElement).closest('[data-dropdown-button]:not([data-dropdown-button="'+buttonUid+'"])')) // Make sure it's not a nested dropdown button
             && !(e.target as HTMLElement).closest('[data-dropdown-content="'+buttonUid+'"] input') // Allow inputs in the dropdown
             && !insideScrollbar // Allow scrollbar dragging inside dropdown
-        ) {
+        )
+        {
             closeDropdown()
         }
     }
@@ -210,19 +212,19 @@
 
             window.addEventListener('scroll', closeDropdown, true)
             window.addEventListener('resize', closeDropdown, true)
-            window.addEventListener('click', closeOnOutsideClick)
+            window.addEventListener('click', closeOnOutsideClick, true)
         }
         else {
             window.removeEventListener('scroll', closeDropdown, true)
             window.removeEventListener('resize', closeDropdown, true)
-            window.removeEventListener('click', closeOnOutsideClick)
+            window.removeEventListener('click', closeOnOutsideClick, true)
         }
     })
 
     onBeforeUnmount(() => {
         window.removeEventListener('scroll', closeDropdown, true)
         window.removeEventListener('resize', closeDropdown, true)
-        window.removeEventListener('click', closeOnOutsideClick)
+        window.removeEventListener('click', closeOnOutsideClick, true)
     })
 
 </script>

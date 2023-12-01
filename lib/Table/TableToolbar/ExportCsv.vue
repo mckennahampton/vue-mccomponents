@@ -10,6 +10,7 @@ const props = defineProps<Props>()
 
 
 const tableUid = inject('tableUid') as string
+const dark = inject('dark') as boolean
 
 const exportToCsv = () => {
     let reportName = `${props.reportTitle ? `_${props.reportTitle}` : ''}`
@@ -63,7 +64,11 @@ const exportToCsv = () => {
 
 </script>
 <template>
-    <MutedButton @click="exportToCsv" class="flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-900 text-black dark:text-white">
+    <MutedButton
+        @click="exportToCsv"
+        :class="[dark ? 'hover:bg-neutral-900 text-white' : 'hover:bg-neutral-100 text-black']"
+        class="flex items-center justify-center"
+    >
         <FasFileCsv class="fill-green-500 mr-2 text-xl" />
         CSV
     </MutedButton>
