@@ -174,7 +174,6 @@ onMounted(() => {
                                 :class="[
                                     dark ? 'border-neutral-800 shadow-neutral-900' : 'border-neutral-400 shadow-neutral-200',
                                 ]">
-                                {{ dark }}
                                 <div class="flex flex-wrap gap-10 items-center justify-start">
                                     <span class="flex items-center justify-between gap-8">
                                         <TableDates v-if="props.showDatePicker"
