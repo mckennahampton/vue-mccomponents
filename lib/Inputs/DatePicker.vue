@@ -35,7 +35,10 @@ watch(props, () => {
 </script>
 <template>
     <label v-if="props.label"
-        class="absolute left-0 -top-5 text-sm transition-all transform -translate-x-1 text-black dark:text-white delay-0"
+        class="absolute left-0 -top-5 text-sm transition-all transform -translate-x-1 delay-0"
+        :class="[
+            props.dark ? 'text-white' : 'text-black'
+        ]"
         :for="inputUid"
     >
         {{ props.label }}
@@ -45,7 +48,7 @@ watch(props, () => {
         v-model="dateModel"
         class="max-w-[150px] rounded-none"
         :class="props.classes"
-        input-class-name="!border-neutral-400 dark:!border-neutral-700"
+        :input-class-name="`!border-neutral-400 ${props.dark ? '!border-neutral-700' : ''}`"
         auto-apply
         :clearable="props.clearable"
         :enable-time-picker="props.enableTime"

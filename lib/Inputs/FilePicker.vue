@@ -21,13 +21,15 @@ interface Props {
     modelValue: any[],
     directUpload?: boolean,
     maxBytes?: number,
+    dark?: boolean,
 }
 const props = withDefaults(defineProps<Props>(), {
     multiple: false,
     name: 'file',
     tabindex: 1,
     directUpload: false,
-    maxBytes: 15728640
+    maxBytes: 15728640,
+    dark: false,
 })
 const emit = defineEmits(['update:modelValue', 'upload'])
 
@@ -158,10 +160,20 @@ const uploadClicked = () => {
 
 </script>
 <template>
-    <div class="flex flex-col gap-5 w-full max-w-[500px] border-2 border-neutral-500 p-4 dark:bg-neutral-900">
+    <div
+        class="flex flex-col gap-5 w-full max-w-[500px] border-2 border-neutral-500 p-4"
+        :class="[
+            props.dark ? 'bg-neutral-900' : ''
+        ]"
+    >
         <div class="flex items-center justify-between whitespace-nowrap">
             <span class="flex flex-col gap-2">
-                <span class=" flex flex-col sm:gap-2 sm:flex-row italic text-sm text-neutral-700 dark:text-neutral-300">
+                <span
+                    class=" flex flex-col sm:gap-2 sm:flex-row italic text-sm"
+                    :class="[
+                        props.dark ? 'text-neutral-300' : 'text-neutral-700'
+                    ]"
+                >
                     <span>Selected:</span>
                     <span><b>{{ `${state.files.length} ${state.files.length === 1 ? 'file' : 'files'}` }}, {{ totalSize }}</b></span>
                 </span>
@@ -185,7 +197,14 @@ const uploadClicked = () => {
                         Upload
                     </MutedButton>
                 </div>
-                <span class="text-sm text-neutral-700 dark:text-neutral-300">Max upload size: {{ formatBytes(props.maxBytes) }}</span>
+                <span
+                    class="text-sm"
+                    :class="[
+                        props.dark ? 'text-neutral-300' : 'text-neutral-700'
+                    ]"
+                >
+                    Max upload size: {{ formatBytes(props.maxBytes) }}
+                </span>
             </div>
         </div>
         <input

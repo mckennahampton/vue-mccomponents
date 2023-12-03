@@ -111,6 +111,7 @@ defineExpose({
         {{ props.label }}
     </label>
     <DropdownButton
+        :dark="props.dark"
         v-bind="$attrs"
         show-icon
         :placement="props.placement ?? 'bottom'"

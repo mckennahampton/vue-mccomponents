@@ -45,12 +45,12 @@ const pageStepDirection = inject('pageStepDirection') as ComputedRef<'forwards' 
 
 </script>
 <template>
-    <TransitionListPage :direction="pageStepDirection">
-        <TransitionGroup
+    <TransitionListPage :direction="pageStepDirection" :page-key="currentPage">
+        <!-- <TransitionGroup
             name="list"
             tag="tbody"
             :key="currentPage"
-        >
+        > -->
             <tr v-for="item in props.items"
                 :class="[
                     {'even:!bg-cyan-200 odd:!bg-cyan-300 !bg-opacity-100': selectable && itemIsSelected(item) && !dark},
@@ -82,36 +82,13 @@ const pageStepDirection = inject('pageStepDirection') as ComputedRef<'forwards' 
                     </template>
                 </Tooltip>
             </tr>
-        </TransitionGroup>
+        <!-- </TransitionGroup> -->
     </TransitionListPage>
 </template>
 <style scoped>
 tr :deep(td), table :deep(.header-prefix) {
     @apply py-1 pl-2 text-sm
 }
-
-/* #region List add/remove/move transition */
-.list-move, 
-.list-enter-active,
-.list-leave-active
-{
-  transition: all 100ms ease-in-out;
-}
-
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateX(30px);
-}
-
-
-/* ensure leaving items are taken out of layout flow so that moving
-   animations can be calculated correctly. */
-.list-leave-active {
-  /* position: absolute; */
-}
-/* #endregion */
-
 
 .disabled {
     @apply relative

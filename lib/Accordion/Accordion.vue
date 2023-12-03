@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { provide, ref, computed } from 'vue'
+import { provide, ref, computed, onBeforeMount, watch } from 'vue'
+
+const props = withDefaults(defineProps<{
+    dark?: boolean,
+}>(),{
+    dark: false
+})
 
 const items = ref([] as any[])
 
@@ -22,7 +28,15 @@ const toggleItem = (uid: string) => {
     }
 }
 
-provide('accordion', { addItem, activeItemUid, toggleItem })
+const isDark = ref(props.dark)
+watch(() => props.dark, (newVal, oldVal) => {
+    if (newVal == oldVal) return
+    isDark.value = props.dark
+})
+onBeforeMount(() => {
+    provide('accordion', { addItem, activeItemUid, toggleItem })
+    provide('dark', isDark)
+})
 
 </script>
 <template>

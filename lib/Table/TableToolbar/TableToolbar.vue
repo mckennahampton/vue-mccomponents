@@ -177,16 +177,18 @@ onMounted(() => {
                                 <div class="flex flex-wrap gap-10 items-center justify-start">
                                     <span class="flex items-center justify-between gap-8">
                                         <TableDates v-if="props.showDatePicker"
+                                            :dark="dark"
                                             ref="tableDatesRef"
                                         />
                                         <template v-if="orderByEntries">
                                             <VR />
-                                            <OrderBy ref="orderByRef" />
+                                            <OrderBy ref="orderByRef" :dark="dark" />
                                         </template>
                                     </span>
                                     <span v-if="props.filters" class="w-full flex flex-wrap items-center justify-start gap-8">
                                         <TableFilters
                                             :filters="props.filters"
+                                            :dark="dark"
                                             ref="tableFiltersRef"
                                         />
                                     </span>
@@ -194,7 +196,6 @@ onMounted(() => {
                                 </div>
 
                                 <div class="flex flex-col h-full gap-3 items-center justify-center">
-                                    <!--@vue-ignore-->
                                     <MutedButton
                                         @click="props.loading ? null : navigateTo(1)"
                                         class="font-bold"
@@ -237,14 +238,9 @@ onMounted(() => {
             <QueryDetails />
 
             <!-- Non-fixed layout paginate buttons -->
-            <!-- @vue-ignore -->
-            <PaginateButtons v-if="props.layout != 'fixed' && props.paginate"
+            <PaginateButtons v-if="props.paginate"
                 class="self-end"
                 :loading="props.loading"
-                :fixed="
-                    //@ts-ignore
-                    props.layout == 'fixed'
-                "
             />
         </div>
 

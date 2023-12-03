@@ -17,9 +17,11 @@
         offset?: number,
         dropdownId?: string,
         noMinWidth?: boolean,
+        dark?: boolean,
     }
     const props = withDefaults(defineProps<Props>(), {
         noMinWidth: false,
+        dark: false,
     })
 
     const open = ref(false)
@@ -242,7 +244,12 @@
         >
             <slot name="button" :open="open" :toggleDropdown="toggleDropdown"></slot>
             <span v-if="showIcon" class="h-4 w-4 flex items-center justify-center transition ease-in-out duration-100" :class="[open ? rotationClass : '']">
-                <FasCaretDown class="fill-black dark:fill-white" :class="{'rotate-180': ( placement == 'top' || placement.includes('top-') )}" />
+                <FasCaretDown
+                    :class="[
+                        {'rotate-180': ( placement == 'top' || placement.includes('top-') )},
+                        props.dark ? 'fill-white' : 'fill-black'
+                    ]"
+                />
             </span>
         </button>
         <Teleport to="#dropdowns">
@@ -252,8 +259,11 @@
                     :id="props.dropdownId"
                     ref="dropdown"
                     :data-dropdown-content="buttonUid"
-                    class="absolute z-30 flex flex-col items-stretch bg-white dark:bg-zinc-950 text-sm shadow-xl max-w-[90vw] xs:max-w-min"
-                    :class="[props.dropdownClasses]"
+                    class="absolute z-30 flex flex-col items-stretch text-sm shadow-xl max-w-[90vw] xs:max-w-min"
+                    :class="[
+                        props.dropdownClasses,
+                        props.dark ? 'bg-zinc-950' : 'bg-white'
+                    ]"
                     :style="{
                         top: dropdownTop + 'px',
                         left: dropdownLeft + 'px',

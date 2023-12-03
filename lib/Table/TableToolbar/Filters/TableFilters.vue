@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Select from '../../../Inputs/Select.vue'
 import InputGroup from '../../../Inputs/InputGroup.vue'
-import { ref, computed, inject, onBeforeMount, type ComputedRef } from 'vue'
+import { ref, computed, inject, onBeforeMount } from 'vue'
 
 
 interface FilterValue {
@@ -20,13 +20,13 @@ export interface Filter {
 }
 
 interface Props {
-    filters: Filter[]
+    filters: Filter[],
+    dark: boolean,
 }
 const props = defineProps<Props>()
 
 const filters = ref(props.filters)
 const filterRefs = ref([])
-const dark = inject('dark') as ComputedRef
 
 onBeforeMount(() => {
     filters.value?.forEach(filter => {
@@ -36,7 +36,7 @@ onBeforeMount(() => {
             filter.values.unshift({
                 title: 'All',
                 value: 'all',
-                classes: `mb-2 border-y-2 ${dark.value ? 'border-neutral-700' : 'border-neutral-300'}`
+                classes: `mb-2 border-y-2 ${props.dark ? 'border-neutral-700' : 'border-neutral-300'}`
             })
         }
 
@@ -126,7 +126,7 @@ defineExpose({
             ref="filterRefs"
             :label="filter.label ?? filter.metric"
             label-style="capitalize"
-            :dark="dark"
+            :dark="props.dark"
         />
     </InputGroup>
 

@@ -2,12 +2,15 @@
 import uid from '../Utilities/uid'
 import { ref, watch, computed } from 'vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     inputInitialValue?: string | number,
     modelValue?: string | number | object,
     label?: string,
     labelStyles?: any,
-}>()
+    dark?: boolean,
+}>(), {
+    dark: false
+})
 
 
 const emit = defineEmits(["update:modelValue"]);
@@ -49,8 +52,11 @@ defineExpose({
     <input
         v-bind="$attrs"
         ref="input"
-        :class="emptyClass"
-        class="w-full h-10 text-black dark:text-white border-b-2 border-b-neutral-400 dark:border-neutral-700 bg-transparent focus:outline-none focus:border-red-500"
+        class="w-full h-10 border-b-2 border-b-neutral-400 bg-transparent focus:outline-none focus:border-red-500"
+        :class="[
+            emptyClass,
+            props.dark ? 'text-white border-b-neutral-700' : 'text-black border-b-neutral-400'
+        ]"
         v-model="inputValue"
         :id="inputUid"
     />

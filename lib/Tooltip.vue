@@ -17,10 +17,12 @@ interface Props {
     bodyClasses?: string,
     manualRef?: boolean,
     elementTag?: string,
+    dark?: boolean,
 }
 const props = withDefaults(defineProps<Props>(), {
     manualRef: false,
-    elementTag: 'span'
+    elementTag: 'span',
+    dark: false,
 })
 
 const slotRef = ref<Element | ComponentPublicInstance | null>(null)
@@ -245,8 +247,11 @@ watch(isOpen, () => {
     <Teleport to="#tooltips">
         <TransitionFade>
             <span
-                class="fixed z-[999999] max-w-[500px] flex flex-col normal-case text-[15px] leading-5 select-none pointer-events-none text-center text-ellipsis py-3 px-4 shadow text-white bg-black"
-                :class="props.tooltipClasses"
+                class="fixed z-[999999] max-w-[500px] flex flex-col normal-case text-[15px] leading-5 select-none pointer-events-none text-center text-ellipsis py-3 px-4 shadow border"
+                :class="[
+                    props.tooltipClasses,
+                    props.dark ? 'text-white bg-black border-neutral-900' : 'text-black bg-white border-neutral-200'
+                ]"
                 :style="{top: tooltipTop + 'px', left: tooltipLeft + 'px'}"
                 ref="tooltipEl"
                 v-if="isOpen && !disabled"

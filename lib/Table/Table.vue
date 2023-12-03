@@ -117,8 +117,10 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 
     // Table UID
     const tableUid = uid()
+    const tableConUid = uid()
     onBeforeMount(() => {
         provide('tableUid', tableUid)
+        provide('tableConUid', tableConUid)
     })
     // *******************************************************************
 
@@ -510,9 +512,14 @@ watch(props, () => {
         <template #table>
             <div
                 class="w-full relative"
-                :class="[{'overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent border-y-2 border-t-neutral-200': props.rowHandling == 'scroll' }]"
+                :class="[
+                    {'overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent border-y-2 border-t-neutral-200': props.rowHandling == 'scroll' },
+                    {'overflow-y-hidden': props.rowHandling !== 'scroll'}
+                ]"
                 :style="{ maxHeight: props.rowHandling == 'scroll' ? ((props.scrollableMaxHeight ?? 500) + 'px') : 'none' }"
+                :id="tableConUid"
             >
+                {{ $props.rowHandling }}
                 <table
                     :class="[{'select-none': resizing}]"
                     ref="tableRef"

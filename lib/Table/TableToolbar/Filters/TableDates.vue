@@ -6,6 +6,7 @@ import InputGroup from '../../../Inputs/InputGroup.vue'
 interface Props {
     maxDate?: string,
     startDateDefault?: string,
+    dark: boolean
 }
 const props = defineProps<Props>()
 
@@ -13,7 +14,6 @@ const dirtyStartDate = inject('dirtyStartDate') as ComputedRef
 const dirtyEndDate = inject('dirtyEndDate') as ComputedRef
 const updateStartDate = inject('updateStartDate') as Function
 const updateEndDate = inject('updateEndDate') as Function
-const dark = inject('dark') as ComputedRef
 
 const resetDates = () => {
     updateEndDate(new Date)
@@ -31,7 +31,7 @@ defineExpose({
             v-model="dirtyStartDate"
             :max-date="dirtyEndDate"
             label="Start Date"
-            :dark="dark"
+            :dark="props.dark"
         />
     </InputGroup>
 
@@ -41,7 +41,7 @@ defineExpose({
             :max-date="props.maxDate ? new Date(props.maxDate) : new Date()"
             :min-date="dirtyStartDate"
             label="End Date"
-            :dark="dark"
+            :dark="props.dark"
         />
     </InputGroup>
 </template>

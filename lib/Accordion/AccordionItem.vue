@@ -1,18 +1,16 @@
 <script setup lang="ts">
 import uid from '../Utilities/uid'
 import FasCaretDown from '../Icons/FasCaretDown.vue'
-import { inject, computed, onBeforeMount, useSlots } from 'vue'
+import { inject, computed, onBeforeMount, useSlots, type ComputedRef } from 'vue'
 import TransitionExpand from '../Transitions/TransitionExpand.vue'
 
 interface Props {
     itemClasses?: string,
-    dark?: boolean,
     buttonToggleOnly?: boolean,
     showIcon?: boolean,
     panelClasses?: string | object | any[],
 }
 const props = withDefaults(defineProps<Props>(), {
-    dark: false,
     buttonToggleOnly: false,
     showIcon: true,
 })
@@ -21,12 +19,13 @@ const slots = useSlots()
 
 const itemUid = uid()
 
-const openClasses = computed(() => {
-    return props.dark ? 'bg-neutral-700' : ''
-})
-
 //@ts-ignore
 const { addItem, activeItemUid, toggleItem } = inject('accordion')
+const dark = inject('dark') as ComputedRef<boolean>
+
+const openClasses = computed(() => {
+    return dark.value ? 'bg-neutral-700' : ''
+})
 
 const toggleCheck = () => {
     if (props.buttonToggleOnly) return
@@ -55,7 +54,14 @@ onBeforeMount(() => {
     <li class="relative whitespace-nowrap">
         <div @click="toggleCheck" class="flex justify-between items-center" :class="[isOpen && openClasses, props.itemClasses, {'hover:cursor-pointer': !props.buttonToggleOnly}]">
             <slot name="header" :toggle="toggle" :isOpen="isOpen"/>
-            <FasCaretDown v-if="props.showIcon" :class="{'rotate-180': isOpen}" class="fa-fw transition-all hover:cursor-pointer fill-black dark:fill-neutral-100" @click="toggle" />
+            <FasCaretDown v-if="props.showIcon"
+                :class="[
+                    {'rotate-180': isOpen},
+                    dark ? 'fill-neutral-100' : 'fill-black'
+                ]"
+                class="fa-fw transition-all hover:cursor-pointer"
+                @click="toggle"
+            />
         </div>
         <template v-if="slots.panel">
             <TransitionExpand>
