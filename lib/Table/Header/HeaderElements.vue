@@ -40,6 +40,7 @@ const isNotSelectHeader = (index: number) => {
         class="whitespace-nowrap pl-2 py-1"
     >
 
+
         <!-- Sorting handler -->
         <HeaderSorter v-if="props.sort && header.sort" :header="header" />
 

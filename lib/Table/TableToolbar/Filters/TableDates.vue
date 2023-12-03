@@ -9,8 +9,8 @@ interface Props {
 }
 const props = defineProps<Props>()
 
-const startDate = inject('startDate') as ComputedRef
-const endDate = inject('endDate') as ComputedRef
+const dirtyStartDate = inject('dirtyStartDate') as ComputedRef
+const dirtyEndDate = inject('dirtyEndDate') as ComputedRef
 const updateStartDate = inject('updateStartDate') as Function
 const updateEndDate = inject('updateEndDate') as Function
 const dark = inject('dark') as ComputedRef
@@ -28,8 +28,8 @@ defineExpose({
 <template>
     <InputGroup>
         <DatePicker
-            v-model="startDate"
-            :max-date="endDate"
+            v-model="dirtyStartDate"
+            :max-date="dirtyEndDate"
             label="Start Date"
             :dark="dark"
         />
@@ -37,12 +37,11 @@ defineExpose({
 
     <InputGroup>
         <DatePicker
-            v-model="endDate"
+            v-model="dirtyEndDate"
             :max-date="props.maxDate ? new Date(props.maxDate) : new Date()"
-            :min-date="startDate"
+            :min-date="dirtyStartDate"
             label="End Date"
             :dark="dark"
         />
     </InputGroup>
-
 </template>

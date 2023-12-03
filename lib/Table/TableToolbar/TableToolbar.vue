@@ -17,6 +17,7 @@ import { type LengthAwarePaginator } from '../../Types/Laravel/LengthAwarePagina
 import TableFilters, { type Filter} from './Filters/TableFilters.vue'
 import FasFilter from '../../Icons/FasFilter.vue'
 import FasCaretDown from '../../Icons/FasCaretDown.vue'
+import QueryDetails from './QueryDetails.vue'
 
 interface Props {
     showToolbar: boolean,
@@ -168,7 +169,12 @@ onMounted(() => {
 
                         <!-- Filter toolbar -->
                         <template #panel v-if="props.showDatePicker || props.filters">
-                            <div class="flex gap-3 items-center justify-between w-full py-5 px-8 border-l-2 shadow-inner mt-3" :class="[dark ? 'border-neutral-800' : 'border-neutral-400']">
+                            <div
+                                class="flex gap-3 items-center justify-between w-full py-5 px-8 border-l-2 mt-3 shadow-inner"
+                                :class="[
+                                    dark ? 'border-neutral-800 shadow-neutral-900' : 'border-neutral-400 shadow-neutral-200',
+                                ]">
+                                {{ dark }}
                                 <div class="flex flex-wrap gap-10 items-center justify-start">
                                     <span class="flex items-center justify-between gap-8">
                                         <TableDates v-if="props.showDatePicker"
@@ -228,16 +234,20 @@ onMounted(() => {
 
         <slot name="table" />
 
-        <!-- Non-fixed layout paginate buttons -->
-        <!-- @vue-ignore -->
-        <PaginateButtons v-if="props.layout != 'fixed' && props.paginate"
-            class="self-end"
-            :loading="props.loading"
-            :fixed="
-                //@ts-ignore
-                props.layout == 'fixed'
-            "
-        />
+        <div class="w-full flex items-center justify-between gap-5">
+            <QueryDetails />
+
+            <!-- Non-fixed layout paginate buttons -->
+            <!-- @vue-ignore -->
+            <PaginateButtons v-if="props.layout != 'fixed' && props.paginate"
+                class="self-end"
+                :loading="props.loading"
+                :fixed="
+                    //@ts-ignore
+                    props.layout == 'fixed'
+                "
+            />
+        </div>
 
     </div>
 

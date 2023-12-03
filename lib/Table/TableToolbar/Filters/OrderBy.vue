@@ -27,7 +27,10 @@ const formattedOrderBy = computed(() => {
     :
     {
         metric: entries.value.find(entry => entry.active)?.value,
-        dir: dirEntries.value.find(entry => entry.active)?.value
+        dir: dirEntries.value.find(entry => entry.active)?.value,
+        ... entries.value.find(entry => entry.active)?.title && {
+            title: entries.value.find(entry => entry.active)?.title 
+        }
     }
 })
 

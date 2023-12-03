@@ -102,7 +102,7 @@ defineExpose({
 </script>
 <template>
      <label v-if="props.label"
-        class="absolute text-sm top-0 origin-[0] px-2 left-1 -translate-y-6 -translate-x-2"
+        class="absolute text-sm top-0 origin-[0] px-2 left-1 -translate-y-2 -translate-x-2"
         :class="[
             props.labelStyle,
             dark ? 'text-white' : 'text-black'

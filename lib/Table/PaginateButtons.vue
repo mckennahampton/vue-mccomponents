@@ -78,12 +78,12 @@ const footerPages = computed(() => {
     >
 
         <!-- First -->
-        <Tooltip :body="'First Page'" :disable="currentPage == 1" :position="'top'" :class="{'disabled': currentPage == 1 || props.loading }">
+        <Tooltip :body="'First'" :disable="currentPage == 1" :position="'top'" :class="{'disabled': currentPage == 1 || props.loading }">
             <FasBackwardStep @click="navigateTo(1)" class="paginate-icon" />
         </Tooltip>
 
         <!-- Previous -->
-        <Tooltip :body="'Previous Page'" :disable="currentPage == 1" :position="'top'" :class="{'disabled': currentPage == 1 || props.loading  }">
+        <Tooltip :body="'Previous'" :disable="currentPage == 1" :position="'top'" :class="{'disabled': currentPage == 1 || props.loading  }">
             <FasChevronLeft @click="navigateTo(currentPage - 1)" class="paginate-icon" />
         </Tooltip>
 
@@ -101,12 +101,12 @@ const footerPages = computed(() => {
         </span>
 
         <!-- Next -->
-        <Tooltip :body="'Next Page'" :disable="currentPage == totalPageCount" :position="'top'" :class="{'disabled': currentPage == totalPageCount || props.loading  }">
+        <Tooltip :body="'Next'" :disable="currentPage == totalPageCount" :position="'top'" :class="{'disabled': currentPage == totalPageCount || props.loading  }">
             <FasChevronRight @click="navigateTo(currentPage + 1)" class="paginate-icon" />
         </Tooltip>
 
         <!-- Last -->
-        <Tooltip :body="'Last Page'" :disable="currentPage == totalPageCount" :position="'top'" :class="{'disabled': currentPage == totalPageCount || props.loading  }">
+        <Tooltip :body="`Last (${totalPageCount})`" :disable="currentPage == totalPageCount" :position="'top'" :class="{'disabled': currentPage == totalPageCount || props.loading  }">
             <FasForwardStep @click="navigateTo(totalPageCount)" class="paginate-icon" />
         </Tooltip>
 

@@ -39,8 +39,8 @@ const items = [
     {"id":189,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
     {"id":190,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
     {"id":191,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
-    {"id":192,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
-    {"id":193,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null}
+    // {"id":192,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null},
+    // {"id":193,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null}
 ] as Post[]
 
 const tableRef = ref(null)
@@ -61,7 +61,7 @@ onBeforeMount(() => {
 })
 </script>
 <template>
-    <div class="w-full h-full flex flex-col items-center justify-between text-black dark:text-white p-10">
+    <div class="w-full h-full flex flex-col items-center justify-start text-black dark:text-white p-10">
         <div class="w-full self-start">
             <div class="p-4 m-3" @click="toggleDark">Toggle Dark</div>
         </div>

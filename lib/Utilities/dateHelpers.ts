@@ -1,17 +1,21 @@
-export const timestampToISO = (stamp: string) => {
-    let temp = new Date(stamp)
-    // return `${temp.getFullYear()}-${temp.getMonth()}-${temp.getDate()}`
+export const timestampToISO = (stamp: string | Date) => {
+    let temp = stamp instanceof Date ? stamp : new Date(stamp)
     return temp.toISOString().split('T')[0]
 }
 
-export const timestampToLocaleTime = (stamp: string) => {
-    let temp = new Date(stamp)
+export const timestampToLocaleTime = (stamp: string | Date) => {
+    let temp = stamp instanceof Date ? stamp : new Date(stamp)
     return temp.toLocaleTimeString()
 }
 
-export const timestampToLocaleDate = (stamp: string) => {
-    let temp = new Date(stamp)
+export const timestampToLocaleDate = (stamp: string | Date) => {
+    let temp = stamp instanceof Date ? stamp : new Date(stamp)
     return temp.toLocaleDateString()
+}
+
+export const timestampToFullFormatted = (stamp: string | Date) => {
+    let temp = stamp instanceof Date ? stamp : new Date(stamp)
+    return temp.toLocaleDateString() + ' ' + temp.toLocaleTimeString()
 }
 
 export function timeDiff(input: string | Date, summarize = true) {

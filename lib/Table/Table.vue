@@ -78,7 +78,10 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const isDark = ref(props.dark)
-watch(props, () => isDark.value = props.dark)
+watch(() => props.dark, (newVal, oldVal) => {
+    if (newVal == oldVal) return
+    isDark.value = props.dark
+})
 onBeforeMount(() => {
     provide('dark', isDark)
 })
@@ -100,6 +103,17 @@ const slots = useSlots() // Used to conditional rendering of the action button s
      * provide() and inject() made a lot of sense so as to avoid prop drilling and relying on unecessary
      * stores
      */
+
+     // Misc. Props
+    const loading = ref(props.loading)
+    watch(() => props.loading, (newValue, oldValue) => {
+        if (newValue == oldValue) return
+        loading.value = props.loading
+    })
+    onBeforeMount(() => {
+        provide('externalPagination', props.externalPagination)
+        provide('loading', loading)
+    })
 
     // Table UID
     const tableUid = uid()
@@ -155,30 +169,42 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 
 
     // Current Page
+    type Direction = 'forwards' | 'backwards'
     const currentPage = ref(1)
+    const pageStepDirection = ref('forwards' as Direction)
     const updateCurrentPage = (page: number) => {
+        currentPage.value < page
+        ? pageStepDirection.value = 'forwards'
+        : pageStepDirection.value = 'backwards'
+
         currentPage.value = page
     }
     onBeforeMount(() => {
         provide('currentPage', currentPage)
         provide('updateCurrentPage', updateCurrentPage)
+        provide('pageStepDirection', pageStepDirection)
     })
     // *******************************************************************
 
 
     // Start & End Dates
     const endDate = ref(new Date)
+    const dirtyEndDate = ref(new Date)
     const startDate = ref(new Date)
+    const dirtyStartDate = ref(new Date)
     const updateEndDate = (val: string) => {
-        endDate.value = new Date(val)
+        dirtyEndDate.value = new Date(val)
     }
     const updateStartDate = (val: string) => {
-        startDate.value = new Date(val)
+        dirtyStartDate.value = new Date(val)
     }
     onBeforeMount(() => {
         startDate.value.setMonth(endDate.value.getMonth() - 1)
+        dirtyStartDate.value.setMonth(endDate.value.getMonth() - 1)
         provide('startDate', startDate)
+        provide('dirtyStartDate', dirtyStartDate)
         provide('endDate', endDate)
+        provide('dirtyEndDate', dirtyEndDate)
         provide('updateStartDate', updateStartDate)
         provide('updateEndDate', updateEndDate)
     })
@@ -186,34 +212,40 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 
 
     // Laravel query filters
-    interface LaravelFormattedFilter {
+    export interface LaravelFormattedFilter {
         metric: string,
         value: any
     }
     const laravelFormattedFilters = ref([] as LaravelFormattedFilter[])
+    const dirtyFormattedFilters = ref([] as LaravelFormattedFilter[])
     const updateLaravelFormattedFilters = (vals: LaravelFormattedFilter[]) => {
-        laravelFormattedFilters.value = vals
+        dirtyFormattedFilters.value = vals
     }
     onBeforeMount(() => {
+        provide('laravelFormattedFilters', laravelFormattedFilters)
         provide('updateLaravelFormattedFilters', updateLaravelFormattedFilters)
     })
     // *******************************************************************
 
     // Laravel order by entries
-    interface LaravelFormattedOrderBy {
+    export interface LaravelFormattedOrderBy {
+        title?: string,
         metric: string,
         dir: 'asc' | 'desc'
     }
     const laravelFormattedOrderBy = ref({} as LaravelFormattedOrderBy)
+    const dirtlaravelFormattedOrderBy = ref({} as LaravelFormattedOrderBy)
     const updateLaravelFormattedOrderBy = (entry: LaravelFormattedOrderBy) => {
-        if (!entry) laravelFormattedOrderBy.value = {} as LaravelFormattedOrderBy
-        else if (entry.metric == 'none') laravelFormattedOrderBy.value = {} as LaravelFormattedOrderBy
-        else laravelFormattedOrderBy.value = entry
+        if (!entry) dirtlaravelFormattedOrderBy.value = {} as LaravelFormattedOrderBy
+        else if (entry.metric == 'none') dirtlaravelFormattedOrderBy.value = {} as LaravelFormattedOrderBy
+        else dirtlaravelFormattedOrderBy.value = entry
     }
     onBeforeMount(() => {
         provide('orderByEntries', props.orderBy)
+        provide('laravelFormattedOrderBy', laravelFormattedOrderBy)
         provide('updateLaravelFormattedOrderBy', updateLaravelFormattedOrderBy)
     })
+    // *******************************************************************
 
 
     // Sorting
@@ -247,25 +279,26 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     // *******************************************************************
 
     // Selectable
-    const itemsWithUid = ref(props.items.map(item => ({
-        ...item,
-        [tableUid + '_uid']: uid()
-    })))
+    const itemsWithUid = ref([] as any[])
+    const preparePropItems = () => {
+        itemsWithUid.value = props.items.map(item => ({
+            ...item,
+            [tableUid + '_uid']: uid()
+        }))
+    }
+
+    // Reactively update the internal table items when the props change
+    onBeforeMount(() => preparePropItems())
+    watch(() => props.items, (newValue, oldValue) => {
+        if (newValue == oldValue) return
+        preparePropItems()
+    })
 
     const selected = ref([] as number[])
     const allSelected = computed(() => pageItems.value.filter(item => !item.disabled).length == selected.value.length)
     const itemIsSelected = (item: any) => selected.value.some(item_uid => item_uid == item[tableUid + '_uid'])
 
     const selectedItems = computed(() => {
-        console.log({
-            items: itemsWithUid.value.filter(item => itemIsSelected(item)),
-            mapped: itemsWithUid.value.filter(item => itemIsSelected(item)).map(item => {
-                const o = {...item}
-                if (tableUid + '_uid' in o) delete o[tableUid + '_uid']
-                return o
-            })
-        })
-
         // Remove the uid key in the exposed selectedItems array
         return itemsWithUid.value.filter(item => itemIsSelected(item)).map(item => {
             const o = {...item}
@@ -354,7 +387,10 @@ const filteredItems = computed(() => {
 const pageItems = computed(() => {
     let items;
 
-    if (!props.externalPagination && props.rowHandling != 'scroll')
+    // If items need to be paginated, "fetch" only the current page's items
+    // If we are using external pagination, then the provided items are already
+    // chunked to the page size, so we don't need to do anything
+    if (!props.externalPagination || props.rowHandling == 'paginate')
     {
         let start = (currentPage.value - 1) * rowsPerPage.value
         let end = start + rowsPerPage.value
@@ -365,24 +401,17 @@ const pageItems = computed(() => {
     }
 
     // Sort the items if applicable
-    if (props.sort) {
-        if(sorting.value) {
-            items.sort((a: object, b: object) => {
+    if (props.sort && sorting.value) {
+        items.sort((a: object, b: object) => {
+            let alpha = sortAsc.value ? a : b
+            let beta = !sortAsc.value ? a : b
+            return typeof deepValue(sortingMetric.value, alpha) == 'number'
+            ? deepValue(sortingMetric.value, alpha) - deepValue(sortingMetric.value, beta)
+            : deepValue(sortingMetric.value, alpha)
+                .toString()
+                .localeCompare(deepValue(sortingMetric.value, beta), undefined, { numeric: true })
 
-                const options = { numeric: true };
-                if (!sortAsc.value) {
-                    deepValue(sortingMetric.value, b)
-                    return typeof deepValue(sortingMetric.value, b) == 'number'
-                    ? deepValue(sortingMetric.value, b) - deepValue(sortingMetric.value, a)
-                    : deepValue(sortingMetric.value, b).toString().localeCompare(deepValue(sortingMetric.value, a), undefined, options)
-                }
-                else {
-                    return typeof deepValue(sortingMetric.value, b) == 'number'
-                    ? deepValue(sortingMetric.value, a) - deepValue(sortingMetric.value, b)
-                    : deepValue(sortingMetric.value, a).toString().localeCompare(deepValue(sortingMetric.value, b), undefined, options)
-                }
-            })
-        }
+        })
     }
     return items
 })
@@ -639,24 +668,6 @@ table :deep(tr td:not(.selectButton)) {
     @apply text-neutral-400
 } */
 
-
-/* #region Row Transitions */
-
-.rows-enter-active,
-.rows-leave-active {
-    transition: all 0.2s ease;
-    overflow-x: hidden;
-}
-.rows-leave-active {
-    display:none
-}
-.rows-enter-from,
-.rows-leave-to {
-  opacity: 0;
-  /* transform: translateX(30px); */
-}
-
-/* #endregion */
 
 /* #region Print styles */
 

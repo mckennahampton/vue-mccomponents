@@ -3,6 +3,7 @@ import RowSelect from './RowSelect.vue'
 import Tooltip from '../../Tooltip.vue'
 import { type Header } from '../Header/HeaderElements.vue'
 import { inject, ref, onMounted, onUpdated, ComputedRef } from 'vue'
+import TransitionListPage from '../../Transitions/TransitionListPage.vue'
 
 interface Props {
     items: any[],
@@ -16,6 +17,8 @@ const currentPage = inject('currentPage') as ComputedRef
 const toggleSelectItem = inject('toggleSelectItem') as Function
 const itemIsSelected = inject('itemIsSelected') as Function
 const dark = inject('dark') as boolean
+const tableUid = inject('tableUid') as string
+const pageStepDirection = inject('pageStepDirection') as ComputedRef<'forwards' | 'backwards'>
 
 //#region Mobile Styling
 
@@ -42,7 +45,7 @@ const dark = inject('dark') as boolean
 
 </script>
 <template>
-    <Transition name="page" mode="out-in">
+    <TransitionListPage :direction="pageStepDirection">
         <TransitionGroup
             name="list"
             tag="tbody"
@@ -59,7 +62,7 @@ const dark = inject('dark') as boolean
                 class="transition-all relative"
                 @dblclick="item.disabled ? null : toggleSelectItem(item)"
                 ref="rowRefs"
-                :key="item.key ?? item.id ?? item.uid ?? JSON.stringify(item)"
+                :key="item[tableUid + '_uid']"
             >
 
                 <!-- Main row content -->
@@ -80,7 +83,7 @@ const dark = inject('dark') as boolean
                 </Tooltip>
             </tr>
         </TransitionGroup>
-    </Transition>
+    </TransitionListPage>
 </template>
 <style scoped>
 tr :deep(td), table :deep(.header-prefix) {
@@ -88,10 +91,11 @@ tr :deep(td), table :deep(.header-prefix) {
 }
 
 /* #region List add/remove/move transition */
-.list-move, /* apply transition to moving elements */
+.list-move, 
 .list-enter-active,
-.list-leave-active {
-  transition: all 0.2s ease-in-out;
+.list-leave-active
+{
+  transition: all 100ms ease-in-out;
 }
 
 .list-enter-from,
@@ -104,16 +108,10 @@ tr :deep(td), table :deep(.header-prefix) {
 /* ensure leaving items are taken out of layout flow so that moving
    animations can be calculated correctly. */
 .list-leave-active {
-  position: absolute;
+  /* position: absolute; */
 }
 /* #endregion */
 
-/* #region Page Change Transition */
-.page-leave-active { transition: all 50ms cubic-bezier(1, 0.5, 0.8, 1); }
-.page-enter-from, .page-leave-to { opacity: 0; }
-.page-enter-active { transition: all 50ms ease-in;  }
-.page-enter-to { opacity: 1; }
-/* #endregion */
 
 .disabled {
     @apply relative
