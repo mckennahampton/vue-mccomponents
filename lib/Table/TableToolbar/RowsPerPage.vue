@@ -11,7 +11,8 @@ export interface RowsPerPageOption {
 }
 
 interface Props {
-    externalPagination: false | LengthAwarePaginator
+    externalPagination: false | LengthAwarePaginator,
+    dark: boolean,
 }
 const props = defineProps<Props>()
 const emit = defineEmits([
@@ -21,7 +22,6 @@ const emit = defineEmits([
 const updateRowsPerPage = inject('updateRowsPerPage') as Function
 const totalItemsLength = inject('totalItemsLength') as ComputedRef
 const navigateTo = inject('navigateTo') as Function
-const dark = inject('dark') as boolean
 
 const rowsPerPageOptions = ref([
     { caption: '10', value: 10, current: true },
@@ -53,16 +53,17 @@ const updated = (length: number) => {
 </script>
 <template>
     <DropdownButton
+        :dark="props.dark"
         :placement="'bottom'"
         show-icon
-        :button-classes="[`${dark ? 'hover:bg-neutral-900' : 'hover:bg-neutral-100'} !px-2 whitespace-nowrap !font-normal !px-0`]"
+        :button-classes="[`${props.dark ? 'hover:bg-neutral-900' : 'hover:bg-neutral-100'} !px-2 whitespace-nowrap !font-normal !px-0`]"
         :dropdown-classes="'whitespace-nowrap w-full border-x-2 border-y-2 border-neutral-300'"
     >
         <template #button>
             {{ currentRowsPerPage?.caption }} Rows Per Page
         </template>
         <template #dropdown>
-            <DropdownItem v-for="item in rowsPerPageOptions" @click="updated(item.value)" :class="{'font-bold': item.current}" >
+            <DropdownItem v-for="item in rowsPerPageOptions" @click="updated(item.value)" :class="{'font-bold': item.current}" :dark="props.dark">
                 {{ item.caption }}
                 {{ item.current ? ' (current)' : '' }}
             </DropdownItem>

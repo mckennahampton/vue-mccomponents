@@ -69,7 +69,7 @@ const footerPages = computed(() => {
 
 </script>
 <template>
-    <div class="flex gap-2 [&>*]:hover:cursor-pointer print:hidden items-center">
+    <div class="flex gap-2 [&>*]:hover:cursor-pointer print:hidden items-center mt-3">
 
         <!-- First -->
         <Tooltip :body="'First'" :disable="currentPage == 1" :position="'top'" :class="{'disabled': currentPage == 1 || props.loading }" :dark="dark">

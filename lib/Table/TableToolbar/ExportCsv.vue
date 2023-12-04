@@ -3,14 +3,13 @@ import { inject } from 'vue'
 import FasFileCsv from '../../Icons/FasFileCsv.vue'
 import MutedButton from '../../Buttons/MutedButton.vue'
 
-interface Props {
+const props = defineProps<{
     reportTitle?: string,
-}
-const props = defineProps<Props>()
+    dark: boolean,
+}>()
 
 
 const tableUid = inject('tableUid') as string
-const dark = inject('dark') as boolean
 
 const exportToCsv = () => {
     let reportName = `${props.reportTitle ? `_${props.reportTitle}` : ''}`
@@ -66,7 +65,7 @@ const exportToCsv = () => {
 <template>
     <MutedButton
         @click="exportToCsv"
-        :class="[dark ? 'hover:bg-neutral-900 text-white' : 'hover:bg-neutral-100 text-black']"
+        :class="[props.dark ? 'hover:bg-neutral-900 text-white' : 'hover:bg-neutral-100 text-black']"
         class="flex items-center justify-center"
     >
         <FasFileCsv class="fill-green-500 mr-2 text-xl" />

@@ -7,15 +7,14 @@ import { toBase64 } from '../../Utilities/fileHelpers'
 import MutedButton from '../../Buttons/MutedButton.vue'
 import { type Header } from '../Table.vue'
 
-interface Props {
+const props = defineProps<{
     reportTitle?: string,
-}
-const props = defineProps<Props>()
+    dark: boolean,
+}>()
 
 const tableUid = inject('tableUid') as string
 const localLogoUrl = inject('localLogoUrl') as string
 const headers = inject('headers') as Header[]
-const dark = inject('dark') as boolean
 
 const exportToPdf = async () => {
 
@@ -65,7 +64,7 @@ const exportToPdf = async () => {
 <template>
     <MutedButton
         @click="exportToPdf"
-        :class="[dark ? 'hover:bg-neutral-900 text-white' : 'hover:bg-neutral-100 text-black']"
+        :class="[props.dark ? 'hover:bg-neutral-900 text-white' : 'hover:bg-neutral-100 text-black']"
         class="flex items-center justify-center"
     >
         <FasFilePdf class="fill-red-500 mr-2 text-xl" />

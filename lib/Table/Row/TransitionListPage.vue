@@ -61,10 +61,18 @@ function onEnter(el: Element, done: Function) {
     el.style.height = 'auto'
 
     const newTableHeight = getComputedStyle(el).height
+
     const tableCon = document.querySelector(`#${tableConUid}`)
+    const tableBorderTop = tableCon ? parseInt(getComputedStyle(tableCon).getPropertyValue("border-top-width")) : 0
+    const tableBorderBottom = tableCon ? parseInt(getComputedStyle(tableCon).getPropertyValue("border-bottom-width")) : 0
+    // ? parseInt(getComputedStyle(tableCon).height) + parseInt(getComputedStyle(tableCon).getPropertyValue("border-top-width").replace('px','')) + parseInt(getComputedStyle(tableCon).getPropertyValue("border-bottom-width").replace('px',''))
+    // : 0
+
     const tableHeader = document.querySelector(`#${tableUid} thead`)
     const tableHeaderHeight = tableHeader ? getComputedStyle(tableHeader).height : 0
-    const newConHeight = parseInt(newTableHeight) + parseInt(tableHeaderHeight.toString()) + 7
+
+    const newConHeight = parseInt(newTableHeight) + parseInt(tableHeaderHeight.toString()) + tableBorderTop + tableBorderBottom
+    // const newConHeight = tableConHeight - parseInt(newTableHeight)
 
     //@ts-ignore
     el.style.width = null

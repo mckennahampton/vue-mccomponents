@@ -127,6 +127,7 @@ onMounted(() => {
 
                                 <!-- Rows per page button -->
                                 <RowsPerPage
+                                    :dark="dark"
                                     :external-pagination="props.externalPagination"
                                     v-model:rows-per-page="rowsPerPage"
                                 />
@@ -134,9 +135,9 @@ onMounted(() => {
                                 <!-- Export buttons -->
                                 <template v-if="props.showExport">
                                     <VR />
-                                    <ExportCsv :report-title="props.reportTitle" />
-                                    <ExportPdf :report-title="props.reportTitle" />
-                                    <PrintTable />
+                                    <ExportCsv :dark="dark" :report-title="props.reportTitle" />
+                                    <ExportPdf :dark="dark" :report-title="props.reportTitle" />
+                                    <PrintTable :dark="dark" />
                                 </template>
 
                                 <!-- Filter bar toggle -->

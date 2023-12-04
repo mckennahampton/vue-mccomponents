@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import RowSelect from './RowSelect.vue'
 import Tooltip from '../../Tooltip.vue'
+import TransitionListPage from './TransitionListPage.vue'
 import { type Header } from '../Header/HeaderElements.vue'
 import { inject, ref, onMounted, onUpdated, ComputedRef } from 'vue'
-import TransitionListPage from '../../Transitions/TransitionListPage.vue'
 
 interface Props {
     items: any[],
@@ -46,43 +46,37 @@ const pageStepDirection = inject('pageStepDirection') as ComputedRef<'forwards' 
 </script>
 <template>
     <TransitionListPage :direction="pageStepDirection" :page-key="currentPage">
-        <!-- <TransitionGroup
-            name="list"
-            tag="tbody"
-            :key="currentPage"
-        > -->
-            <tr v-for="item in props.items"
-                :class="[
-                    {'even:!bg-cyan-200 odd:!bg-cyan-300 !bg-opacity-100': selectable && itemIsSelected(item) && !dark},
-                    {'odd:!bg-cyan-800 even:!bg-cyan-900': selectable && itemIsSelected(item) && dark},
-                    {'[&>*]:disabled': item.disabled},
-                    dark ? 'odd:bg-white odd:bg-opacity-5' : 'odd:bg-black odd:bg-opacity-5',
-                    props.rowClasses
-                ]"
-                class="transition-all relative"
-                @dblclick="item.disabled ? null : toggleSelectItem(item)"
-                ref="rowRefs"
-                :key="item[tableUid + '_uid']"
+        <tr v-for="item in props.items"
+            :class="[
+                {'even:!bg-cyan-200 odd:!bg-cyan-300 !bg-opacity-100': selectable && itemIsSelected(item) && !dark},
+                {'odd:!bg-cyan-800 even:!bg-cyan-900': selectable && itemIsSelected(item) && dark},
+                {'[&>*]:disabled': item.disabled},
+                dark ? 'odd:bg-white odd:bg-opacity-5' : 'odd:bg-black odd:bg-opacity-5',
+                props.rowClasses
+            ]"
+            class="transition-all relative"
+            @dblclick="item.disabled ? null : toggleSelectItem(item)"
+            ref="rowRefs"
+            :key="item[tableUid + '_uid']"
+        >
+
+            <!-- Main row content -->
+            <slot name="rows" :item="item" />
+                
+            <!-- Select button -->
+            <RowSelect v-if="selectable" :item="item" />
+
+            <!-- Overlay for disabled items -->
+            <Tooltip v-if="item.disabled"
+                :body="item.tooltipBody ?? 'Item is disabled'"
+                position="center"
+                manual-ref
             >
-
-                <!-- Main row content -->
-                <slot name="rows" :item="item" />
-                    
-                <!-- Select button -->
-                <RowSelect v-if="selectable" :item="item" />
-
-                <!-- Overlay for disabled items -->
-                <Tooltip v-if="item.disabled"
-                    :body="item.tooltipBody ?? 'Item is disabled'"
-                    position="center"
-                    manual-ref
-                >
-                    <template v-slot="{setRef}">
-                        <span class="!absolute w-full h-full left-0 top-0" :ref="r=>setRef(r)"></span>
-                    </template>
-                </Tooltip>
-            </tr>
-        <!-- </TransitionGroup> -->
+                <template v-slot="{setRef}">
+                    <span class="!absolute w-full h-full left-0 top-0" :ref="r=>setRef(r)"></span>
+                </template>
+            </Tooltip>
+        </tr>
     </TransitionListPage>
 </template>
 <style scoped>
