@@ -115,7 +115,14 @@ onMounted(() => {
                             <!-- Row Options Selector -->
                             <div class="flex w-full max-w-[500px] md:max-w-none items-center justify-between md:justify-start gap-5 mb-5 md:mb-0">
                                 <!-- Quick Filter -->
-                                <Input placeholder="Filter Visible Rows..." v-model="textFilter" class="w-[200px] md:w-auto" />
+                                <Input
+                                    placeholder="Filter Visible Rows..."
+                                    v-model="textFilter"
+                                    class="w-[200px] md:w-auto"
+                                    :class="[
+                                        dark ? 'text-white' : 'text-black'
+                                    ]"
+                                />
                                 <MutedButton v-if="filtered"
                                     @click="resetFilter"
                                     class="italic whitespace-nowrap text-cyan-500"

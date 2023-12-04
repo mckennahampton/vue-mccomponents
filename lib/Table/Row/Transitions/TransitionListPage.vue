@@ -2,9 +2,10 @@
 import { ref, inject } from 'vue'
 
 const props = withDefaults(defineProps<{
-    direction?: 'forwards' | 'backwards',
+    direction?: 'forwards' | 'backwards' | 'none',
     durationMs?: number,
     pageKey: string | number,
+    itemsLength: number,
 }>(), {
     direction: 'forwards',
     durationMs: 100
@@ -12,17 +13,27 @@ const props = withDefaults(defineProps<{
 
 const tableUid = inject('tableUid') as string
 const tableConUid = inject('tableConUid') as string
+const updatePageStepDirection = inject('updatePageStepDirection') as Function
 
 const originalOverflow = ref('')
 const originalHeight = ref('')
 const originalWidth = ref('')
 const originalDisplay = ref('')
 const originalTableConHeight = ref('')
+const originalTableColumnWidths = ref([] as string[])
+const newTableColumnWidths = ref([] as string[])
 
 function onBeforeLeave(el: Element) {
 
     let tableCon = document.querySelector(`#${tableConUid}`)
     originalTableConHeight.value = tableCon ? getComputedStyle(tableCon).height : ''
+
+    originalTableColumnWidths.value.length = 0
+    newTableColumnWidths.value.length = 0
+
+    tableCon?.querySelectorAll('thead tr th:not([data-th-select])').forEach(th => {
+        originalTableColumnWidths.value.push(getComputedStyle(th).width)
+    })
 
     //@ts-ignore
     if (el.parentElement)
@@ -41,14 +52,23 @@ function onBeforeLeave(el: Element) {
     el.style.transition = `all ${props.durationMs}ms ease-out` // Need to set the root element transition to allow the child items time to animate
     el.querySelectorAll(':scope > *').forEach(_el => {
         //@ts-ignore
-        _el.style.animation = props.direction == 'forwards' ? `leaveForwards ${props.durationMs}ms` : `leaveBackwards ${props.durationMs}ms`
+        if (props.direction == 'forwards') _el.style.animation = `leaveForwards ${props.durationMs}ms`
         //@ts-ignore
-        _el.style.opacity = 0 // Keeps the outgoing list from blipping back on the page for a moment
+        else if (props.direction == 'backwards') _el.style.animation = `leaveBackwards ${props.durationMs}ms`
+        //@ts-ignore
+        // else _el.style.animation = `leave ${props.durationMs}ms`
+        //@ts-ignore
+        if (props.direction == 'forwards' || props.direction == 'backwards') _el.style.opacity = 0 // Keeps the outgoing list from blipping back on the page for a moment
         
     })
 }
 
 function onEnter(el: Element, done: Function) {
+    const tableCon = document.querySelector(`#${tableConUid}`)
+    tableCon?.querySelectorAll('thead tr th:not([data-th-select])').forEach(th => {
+        //@ts-ignore
+        th.style.width = 'auto'
+    })
 
     // Animate parent container height change
     //@ts-ignore
@@ -62,7 +82,6 @@ function onEnter(el: Element, done: Function) {
 
     const newTableHeight = getComputedStyle(el).height
 
-    const tableCon = document.querySelector(`#${tableConUid}`)
     const tableBorderTop = tableCon ? parseInt(getComputedStyle(tableCon).getPropertyValue("border-top-width")) : 0
     const tableBorderBottom = tableCon ? parseInt(getComputedStyle(tableCon).getPropertyValue("border-bottom-width")) : 0
     // ? parseInt(getComputedStyle(tableCon).height) + parseInt(getComputedStyle(tableCon).getPropertyValue("border-top-width").replace('px','')) + parseInt(getComputedStyle(tableCon).getPropertyValue("border-bottom-width").replace('px',''))
@@ -98,11 +117,37 @@ function onEnter(el: Element, done: Function) {
         tableCon.style.height = newConHeight+'px'
     })
 
-    // if (el.parentElement) el.parentElement.style.height = 'auto'
+    // Get the new TD widths
+    el.querySelectorAll('tr:first-child td:not([data-td-select])').forEach(th => {
+        newTableColumnWidths.value.push(getComputedStyle(th).width)
+    })
+
+    // Manually set the THs to their original width
+    tableCon?.querySelectorAll('thead tr th:not([data-th-select])').forEach((th, index) => {
+        //@ts-ignore
+        th.style.width = originalTableColumnWidths.value[index]
+    })
+
+    // Loop through the saved TD widths and animate the TH width change
+    newTableColumnWidths.value.forEach((newWidth, index) => {
+        let th = tableCon?.querySelector(`thead tr th:nth-child(${index + 1})`)
+        if (th) {
+            //@ts-ignore
+            th.style.transition = `all ${props.durationMs}ms ease-out`
+            requestAnimationFrame(() => {
+                //@ts-ignore
+                th.style.width = newWidth
+            })
+        }
+    })
 
     el.querySelectorAll(':scope > *').forEach(_el => {
         //@ts-ignore
-        _el.style.animation = props.direction == 'forwards' ? `enterForwards ${props.durationMs}ms` : `enterBackwards ${props.durationMs}ms`
+        if (props.direction == 'forwards') _el.style.animation = `enterForwards ${props.durationMs}ms`
+        //@ts-ignore
+        else if (props.direction == 'backwards') _el.style.animation = `enterBackwards ${props.durationMs}ms`
+        //@ts-ignore
+        // else _el.style.animation = `enter ${props.durationMs}ms`
     })
 
     setTimeout(() => {
@@ -117,7 +162,19 @@ function onEnter(el: Element, done: Function) {
             el.parentElement.style.overflow = originalOverflow.value
             //@ts-ignore
             el.style.display = originalDisplay.value
+            //@ts-ignore
+            tableCon.style.height = 'auto'
+            //@ts-ignore
+            el.style.height = 'auto'
         }
+
+        updatePageStepDirection('none')
+
+        tableCon?.querySelectorAll(`thead tr th`).forEach(th => {
+            //@ts-ignore
+            th.style.transition = ''
+        })
+
     }, props.durationMs)
 
     done()
@@ -166,6 +223,11 @@ function onEnter(el: Element, done: Function) {
     }
 }
 
+@keyframes enter {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+}
+
 @keyframes leaveBackwards {
     0% {
         transform: translateX('0px');
@@ -191,7 +253,11 @@ function onEnter(el: Element, done: Function) {
     }
 }
 
-/* #region List add/remove/move transition */
+@keyframes leave {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
 .list-move, 
 .list-enter-active,
 .list-leave-active
@@ -204,6 +270,4 @@ function onEnter(el: Element, done: Function) {
   opacity: 0;
   transform: translateX(30px);
 }
-
-/* #endregion */
 </style>

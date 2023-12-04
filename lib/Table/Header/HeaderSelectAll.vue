@@ -17,16 +17,19 @@ const allSelected = inject('allSelected') as ComputedRef
 <template>
     <th
         @click.stop="toggleSelectAll"
-        class="hover:cursor-pointer text-center !px-1 print:invisible"
+        class="hover:cursor-pointer text-center !px-1 print:invisible w-[60px]"
         data-th-select
     >
-        <FasCircleCheck v-if="props.pageItems.length > 0 && allSelected"
-            class="mx-2"
-            :class="[dark ? 'fill-white' : 'fill-black']"
-        />
-        <FarCircleCheck v-else
-            class="mx-2"
-            :class="[dark ? 'fill-neutral-500' : 'fill-black']"
-        />
+        <span class="flex items-center justify-center">
+            <FasCircleCheck v-if="props.pageItems.length > 0 && allSelected"
+                class="mx-2"
+                :class="[dark ? 'fill-white' : 'fill-black']"
+            />
+            <FarCircleCheck v-else
+                class="mx-2"
+                :class="[dark ? 'fill-neutral-500' : 'fill-black']"
+            />
+        </span>
+
     </th>
 </template>

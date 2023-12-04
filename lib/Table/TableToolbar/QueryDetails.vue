@@ -11,6 +11,8 @@ const laravelFormattedOrderBy = inject('laravelFormattedOrderBy') as ComputedRef
 const totalItemsLength = inject('totalItemsLength') as ComputedRef<number>
 const externalPagination = inject('externalPagination') as ComputedRef<boolean>
 const loading = inject('loading') as boolean
+const filtered = inject('filtered') as ComputedRef<boolean>
+const filteredItems = inject('filteredItems') as ComputedRef<any[]>
 
 const orderByTitle = computed(() => laravelFormattedOrderBy.value.title ?? laravelFormattedOrderBy.value.metric )
 const orderByDir = computed(() => laravelFormattedOrderBy.value.dir == 'asc' ? 'Ascending' : 'Descending')
@@ -21,7 +23,16 @@ const orderByDir = computed(() => laravelFormattedOrderBy.value.dir == 'asc' ? '
     <div v-if="!loading" class="flex items-center justify-start gap-5 italic text-neutral-600">
 
         <!-- Item total count -->
-        <span><span class="_label">Total:</span> {{ totalItemsLength }}</span>
+        <span>
+            <span class="_label">Total:</span> {{ totalItemsLength }}
+        </span>
+
+        <template v-if="filtered">
+            <VR inner-classes="!mx-0"/>
+            <span>
+                <span class="_label">Filtered:</span> <span>{{ filteredItems.length }}</span>
+            </span>
+        </template>
 
         <!-- Start & End dates -->
         <template v-if="(startDate || endDate) && externalPagination">

@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import uid from '../Utilities/uid'
-// import { useTableStore } from '@/Stores/tables'
 import RowElements from './Row/RowElements.vue'
-import EmptyItemsRow from './Row/EmptyItemsRow.vue'
 import { deepValue } from '../Utilities/objectHelpers'
 import HeaderElements from './Header/HeaderElements.vue'
 import HeaderSelectAll from './Header/HeaderSelectAll.vue'
@@ -115,6 +113,17 @@ const slots = useSlots() // Used to conditional rendering of the action button s
         provide('loading', loading)
     })
 
+    // Table Transition properties
+    type Direction = 'forwards' | 'backwards' | 'none'
+    const pageStepDirection = ref('forwards' as Direction)
+    const updatePageStepDirection = (dir: Direction) => {
+        pageStepDirection.value = dir
+    }
+    onBeforeMount(() => {
+        provide('updatePageStepDirection', updatePageStepDirection)
+    })
+
+
     // Table UID
     const tableUid = uid()
     const tableConUid = uid()
@@ -147,6 +156,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     const quickFilter = ref('')
     const updateQuickFilter = (val: string) => {
         quickFilter.value = val
+        currentPage.value = 1
     }
     const filtered = computed(() => {
         return Boolean(quickFilter.value)
@@ -162,6 +172,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     const rowsPerPage = ref(10)
     const updateRowsPerPage = (length: number) => {
         rowsPerPage.value = length
+        updatePageStepDirection('none')
     }
     onBeforeMount(() => {
         provide('rowsPerPage', rowsPerPage)
@@ -171,13 +182,11 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 
 
     // Current Page
-    type Direction = 'forwards' | 'backwards'
     const currentPage = ref(1)
-    const pageStepDirection = ref('forwards' as Direction)
     const updateCurrentPage = (page: number) => {
         currentPage.value < page
-        ? pageStepDirection.value = 'forwards'
-        : pageStepDirection.value = 'backwards'
+        ? updatePageStepDirection('forwards')
+        : updatePageStepDirection('backwards')
 
         currentPage.value = page
     }
@@ -420,6 +429,7 @@ const pageItems = computed(() => {
 
 onBeforeMount(() => {
     provide('filteredItems', filteredItems)
+    provide('filtered', filtered)
 })
 
 const navigateTo = (page: number) => {
@@ -522,6 +532,7 @@ watch(props, () => {
                 {{ $props.rowHandling }}
                 <table
                     :class="[{'select-none': resizing}]"
+                    class="overflow-x-clip"
                     ref="tableRef"
                     v-bind="$attrs"
                     :id="tableUid"
@@ -544,7 +555,7 @@ watch(props, () => {
                     </thead>
 
                     <!-- Non-empty rows -->
-                    <RowElements v-if="pageItems.length > 0 && !props.loading"
+                    <RowElements v-if="!props.loading"
                         :headers="props.headers"
                         :items="pageItems"
                         :row-classes="props.rowClasses"
@@ -561,11 +572,6 @@ watch(props, () => {
                                 :cols="props.headers.length + (props.selectable ? 1 : 0)"
                             />
                         </template>
-                    </tbody>
-
-                    <!-- Non-loading empty rows -->
-                    <tbody v-else>
-                        <EmptyItemsRow :colspan="(props.selectable) ? headers.length + 1 : headers.length" />
                     </tbody>
                     
                 </table>
