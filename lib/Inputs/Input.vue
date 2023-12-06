@@ -52,10 +52,11 @@ defineExpose({
     <input
         v-bind="$attrs"
         ref="input"
-        class="w-full h-10 border-b-2 border-b-neutral-400 bg-transparent focus:outline-none focus:border-red-500"
+        style="box-shadow: none;"
+        class="w-full h-10 border-b-2 bg-transparent focus:border-red-500"
         :class="[
             emptyClass,
-            props.dark ? 'text-white border-b-neutral-700' : 'text-black border-b-neutral-400'
+            props.dark ? 'text-white !border-b-neutral-700' : 'text-black !border-b-neutral-400'
         ]"
         v-model="inputValue"
         :id="inputUid"

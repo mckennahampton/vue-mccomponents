@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { ref, inject } from 'vue'
+import { ref, inject, type ComputedRef } from 'vue'
+import { type Header } from '../../Header/HeaderElements.vue'
+import TableRowSkeleton from '../../../Skeletons/Table/TableRowSkeleton.vue'
+import { type LengthAwarePaginator } from '../../../Types/Laravel/LengthAwarePaginator'
+
 
 const props = withDefaults(defineProps<{
     direction?: 'forwards' | 'backwards' | 'none',
     durationMs?: number,
     pageKey: string | number,
     itemsLength: number,
+    loading: boolean,
+    headers: Header[]
 }>(), {
     direction: 'forwards',
     durationMs: 100
@@ -14,6 +20,11 @@ const props = withDefaults(defineProps<{
 const tableUid = inject('tableUid') as string
 const tableConUid = inject('tableConUid') as string
 const updatePageStepDirection = inject('updatePageStepDirection') as Function
+const externalPagination = inject('externalPagination') as false | LengthAwarePaginator
+const rowsPerPage = inject('rowsPerPage') as ComputedRef<number>
+    const selectable = inject('selectable') as boolean
+
+
 
 const originalOverflow = ref('')
 const originalHeight = ref('')
@@ -24,7 +35,6 @@ const originalTableColumnWidths = ref([] as string[])
 const newTableColumnWidths = ref([] as string[])
 
 function onBeforeLeave(el: Element) {
-
     let tableCon = document.querySelector(`#${tableConUid}`)
     originalTableConHeight.value = tableCon ? getComputedStyle(tableCon).height : ''
 
@@ -50,20 +60,24 @@ function onBeforeLeave(el: Element) {
     // Animate the incoming list items
     //@ts-ignore
     el.style.transition = `all ${props.durationMs}ms ease-out` // Need to set the root element transition to allow the child items time to animate
+    //@ts-ignore
+    if (externalPagination) el.style.opacity = 0
+
     el.querySelectorAll(':scope > *').forEach(_el => {
         //@ts-ignore
-        if (props.direction == 'forwards') _el.style.animation = `leaveForwards ${props.durationMs}ms`
+        if (props.direction == 'forwards' && !externalPagination) _el.style.animation = `leaveForwards ${props.durationMs}ms`
         //@ts-ignore
-        else if (props.direction == 'backwards') _el.style.animation = `leaveBackwards ${props.durationMs}ms`
+        else if (props.direction == 'backwards' && !externalPagination) _el.style.animation = `leaveBackwards ${props.durationMs}ms`
         //@ts-ignore
-        // else _el.style.animation = `leave ${props.durationMs}ms`
+        else _el.style.animation = `leave ${props.durationMs}ms`
         //@ts-ignore
-        if (props.direction == 'forwards' || props.direction == 'backwards') _el.style.opacity = 0 // Keeps the outgoing list from blipping back on the page for a moment
+        if (props.direction == 'forwards' || props.direction == 'backwards' || externalPagination) _el.style.opacity = 0 // Keeps the outgoing list from blipping back on the page for a moment
         
     })
 }
 
 function onEnter(el: Element, done: Function) {
+
     const tableCon = document.querySelector(`#${tableConUid}`)
     tableCon?.querySelectorAll('thead tr th:not([data-th-select])').forEach(th => {
         //@ts-ignore
@@ -132,6 +146,9 @@ function onEnter(el: Element, done: Function) {
     newTableColumnWidths.value.forEach((newWidth, index) => {
         let th = tableCon?.querySelector(`thead tr th:nth-child(${index + 1})`)
         if (th) {
+
+            getComputedStyle(th).width // Force a re-paint so the browser has the accurate width to animate from
+
             //@ts-ignore
             th.style.transition = `all ${props.durationMs}ms ease-out`
             requestAnimationFrame(() => {
@@ -143,11 +160,11 @@ function onEnter(el: Element, done: Function) {
 
     el.querySelectorAll(':scope > *').forEach(_el => {
         //@ts-ignore
-        if (props.direction == 'forwards') _el.style.animation = `enterForwards ${props.durationMs}ms`
+        if (props.direction == 'forwards' && !externalPagination) _el.style.animation = `enterForwards ${props.durationMs}ms`
         //@ts-ignore
-        else if (props.direction == 'backwards') _el.style.animation = `enterBackwards ${props.durationMs}ms`
+        else if (props.direction == 'backwards' && !externalPagination) _el.style.animation = `enterBackwards ${props.durationMs}ms`
         //@ts-ignore
-        // else _el.style.animation = `enter ${props.durationMs}ms`
+        else _el.style.animation = `enter ${props.durationMs}ms`
     })
 
     setTimeout(() => {
@@ -189,13 +206,21 @@ function onEnter(el: Element, done: Function) {
         @before-leave="onBeforeLeave"
         @enter="onEnter"
     >
-        <TransitionGroup
+        <TransitionGroup v-if="!props.loading"
             name="list"
             tag="tbody"
             :key="props.pageKey"
         >
             <slot />
         </TransitionGroup>
+
+        <tbody v-else>
+            <!-- @vue-ignore-->
+            <TableRowSkeleton v-for="index in rowsPerPage"
+                :cols="props.headers.length + (selectable ? 1 : 0)"
+            />
+        </tbody>
+
     </Transition>
 </template>
 <style>

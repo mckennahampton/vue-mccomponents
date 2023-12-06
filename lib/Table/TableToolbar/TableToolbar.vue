@@ -118,7 +118,7 @@ onMounted(() => {
                                 <Input
                                     placeholder="Filter Visible Rows..."
                                     v-model="textFilter"
-                                    class="w-[200px] md:w-auto"
+                                    class="w-[200px] md:w-auto !border-x-0 !border-t-0 !outline-none !shadow-[none]"
                                     :class="[
                                         dark ? 'text-white' : 'text-black'
                                     ]"

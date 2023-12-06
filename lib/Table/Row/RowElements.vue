@@ -9,7 +9,8 @@ import EmptyItemsRow from './EmptyItemsRow.vue'
 interface Props {
     items: any[],
     headers: Header[],
-    rowClasses?: string | object | any[]
+    rowClasses?: string | object | any[],
+    loading: boolean,
 }
 const props = defineProps<Props>()
 
@@ -47,8 +48,14 @@ const rowsPerPage = inject('rowsPerPage') as ComputedRef<number>
 
 </script>
 <template>
-    <TransitionListPage :direction="pageStepDirection" :page-key="currentPage + (props.items.length > 0 ? 1 : 0) + rowsPerPage" :items-length="props.items.length">
-        <tr v-if="props.items.length > 0" v-for="item in props.items"
+    <TransitionListPage
+        :direction="pageStepDirection"
+        :page-key="currentPage + (props.items.length > 0 ? 1 : 0) + rowsPerPage"
+        :items-length="props.items.length"
+        :loading="props.loading"
+        :headers="props.headers"
+    >
+        <tr v-if="props.items.length" v-for="item in props.items"
             :class="[
                 {'even:!bg-cyan-200 odd:!bg-cyan-300 !bg-opacity-100': selectable && itemIsSelected(item) && !dark},
                 {'odd:!bg-cyan-800 even:!bg-cyan-900': selectable && itemIsSelected(item) && dark},

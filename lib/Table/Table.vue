@@ -11,7 +11,6 @@ import {
     ref, onBeforeMount,
     computed, watch, useSlots, provide
 } from 'vue'
-import TableRowSkeleton from '../Skeletons/Table/TableRowSkeleton.vue'
 
 //#region Types
 
@@ -172,6 +171,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     const rowsPerPage = ref(10)
     const updateRowsPerPage = (length: number) => {
         rowsPerPage.value = length
+        currentPage.value = 1
         updatePageStepDirection('none')
     }
     onBeforeMount(() => {
@@ -529,7 +529,6 @@ watch(props, () => {
                 :style="{ maxHeight: props.rowHandling == 'scroll' ? ((props.scrollableMaxHeight ?? 500) + 'px') : 'none' }"
                 :id="tableConUid"
             >
-                {{ $props.rowHandling }}
                 <table
                     :class="[{'select-none': resizing}]"
                     class="overflow-x-clip"
@@ -537,7 +536,14 @@ watch(props, () => {
                     v-bind="$attrs"
                     :id="tableUid"
                 >
-                    <thead ref="thead" :class="[{'sticky -top-[1px] z-10 !border-0': props.rowHandling == 'scroll'}]">
+                    <thead
+                        ref="thead"
+                        class="border-y-2"
+                        :class="[
+                            {'sticky -top-[1px] z-10 !border-0': props.rowHandling == 'scroll'},
+                            props.dark ? 'border-y-neutral-700' : 'border-y-neutral-400'
+                        ]"
+                    >
                         <tr>
                             <HeaderElements
                                 :resize="props.resize"
@@ -554,26 +560,17 @@ watch(props, () => {
                         </tr>
                     </thead>
 
-                    <!-- Non-empty rows -->
                     <RowElements v-if="!props.loading"
                         :headers="props.headers"
                         :items="pageItems"
                         :row-classes="props.rowClasses"
+                        :loading="props.loading"
                     >
                         <template #rows="{item}">
                             <slot name="rows" :item="item" />
                         </template>
                     </RowElements>
 
-                    <!-- Loading/refreshing placeholder -->
-                    <tbody v-else-if="props.loading">
-                        <template v-for="index in rowsPerPage">
-                            <TableRowSkeleton v-if="index"
-                                :cols="props.headers.length + (props.selectable ? 1 : 0)"
-                            />
-                        </template>
-                    </tbody>
-                    
                 </table>
 
             </div>
