@@ -8,6 +8,7 @@ import FasForwardStep from '../Icons/FasForwardStep.vue'
 
 interface Props {
     loading: boolean,
+    dark: boolean,
 }
 const props = defineProps<Props>()
 
@@ -17,7 +18,6 @@ const rowsPerPage = inject('rowsPerPage') as ComputedRef
 const currentPage = inject('currentPage') as ComputedRef
 const totalItemsLength = inject('totalItemsLength') as ComputedRef
 const filteredItems = inject('filteredItems') as ComputedRef
-const dark = inject('dark') as boolean
 
 const totalPageCount = computed(() => {
     return filtered.value

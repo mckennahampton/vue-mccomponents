@@ -65,7 +65,18 @@ onBeforeMount(() => {
         <div class="w-full self-start">
             <div class="p-4 m-3" @click="toggleDark">Toggle Dark</div>
         </div>
-        <Table class="justify-self-center" paginate sort resize selectable show-date-picker show-export :toolbar="true" ref="tableRef" :items="items" :dark="isDark"
+        <Table
+            class="justify-self-center"
+            paginate
+            sort
+            resize
+            selectable
+            show-date-picker
+            show-export
+            :toolbar="true"
+            ref="tableRef" 
+            :items="items"
+            :dark="isDark"
             :filters="[
                 {
                     metric: 'published',
@@ -91,30 +102,30 @@ onBeforeMount(() => {
                 { value: 'whse', title: 'Whse' },
                 { value: 'operator_id', title: 'SX Operator' },
             ]"
-            :headers="[
-                { caption: 'Title', sort: 'title' },
-                { caption: 'Slug', sort: 'slug' },
-                { caption: 'Author', sort: 'author.name', filter: 'author.name' },
-                { caption: 'Category', sort: 'category_name' },
-                { caption: 'Published', sort: 'published' }
+            :columns="[
+                { caption: 'Title', key: 'title', cellOptions: { ellipse: true, } },
+                { caption: 'Slug', key: 'slug', cellOptions: { ellipse: true, } },
+                { caption: 'Author', key: 'author.name', cellOptions: { ellipse: true, } },
+                { caption: 'Category', key: 'category_name', cellOptions: { ellipse: true, } },
+                { caption: 'Published', key: 'published' }
             ]"
         >
-            <template #rows="{ item }: { item: Post }">
-                <td :class="{'italic text-neutral-600 dark:text-neutral-400': !item.title}">
-                    <span class="flex items-center gap-3">
-                        <!-- <span class="ellipse">{{ item.title ?? 'No title' }}</span> -->
-                        <span class="ellipse">
-                            {{ item.title ?? 'No title' }}
-                        </span>
-                        
-                    </span>
-                </td>
-                <td><span class="ellipse">{{ item.slug }}</span></td>
-                <td><span class="ellipse">{{ item.author.name }}</span></td>
-                <td><span class="ellipse">{{ item.category_name }}</span></td>
-                <td class="flex gap-3 items-center justify-start ellipse">
-                    test
-                </td>
+            <template #cell(title)="{ item }: { item: Post }">
+                <span class="flex items-center gap-3" :class="{'italic text-neutral-600 dark:text-neutral-400': !item.title}">
+                    {{ item.title ?? 'No title' }}
+                </span>
+            </template>
+            <template #cell(slug)="{ item }: { item: Post }">
+                {{ item.slug }}
+            </template>
+            <template #cell(author.name)="{ item }: { item: Post }">
+                {{ item.author.name }}
+            </template>
+            <template #cell(category_name)="{ item }: { item: Post }">
+                {{ item.category_name }}
+            </template>
+            <template #cell(published)="{ item }: { item: Post }">
+                {{ item.published }}
             </template>
         </Table>
     </div>

@@ -20,7 +20,7 @@ import FasCaretDown from '../../Icons/FasCaretDown.vue'
 import QueryDetails from './QueryDetails.vue'
 
 interface Props {
-    showToolbar: boolean,
+    toolbar: boolean,
     showDatePicker: boolean,
     filters?: Filter[],
     externalPagination: false | LengthAwarePaginator,
@@ -28,6 +28,8 @@ interface Props {
     reportTitle?: string,
     loading: boolean,
     paginate: boolean,
+    items: any[],
+    dark: boolean,
 }
 const props = defineProps<Props>()
 
@@ -45,7 +47,6 @@ const filtered = inject('filtered') as Boolean
 const updateQuickFilter = inject('updateQuickFilter') as Function
 const rowsPerPage = inject('rowsPerPage') as ComputedRef
 const orderByEntries = inject('orderByEntries') as OrderByEntry[]
-const dark = inject('dark') as boolean
 
 const deselectAll = inject('deselectAll') as Function
 
@@ -97,7 +98,7 @@ onMounted(() => {
 </script>
 <template>
     <div class="flex flex-col items-start justify-center w-full mb-20 relative">
-        <template v-if="props.showToolbar">
+        <template v-if="props.toolbar">
             <div 
                 :class="[{'disabled': props.loading}]"
                 class="relative flex justify-between items-center bottom-0 left-0 w-full select-none py-3 print:hidden"
@@ -242,6 +243,16 @@ onMounted(() => {
 
         <slot name="table" />
 
+        <div v-if="slots.footer"
+            class="w-full border-y-2"
+            :class="[
+                {'border-y-neutral-200': !props.dark},
+                {'border-y-neutral-800': props.dark}
+            ]"
+        >
+            <slot name="footer" :items="items" />
+        </div>
+
         <div class="w-full flex items-center justify-between gap-5">
             <QueryDetails />
 
@@ -249,6 +260,7 @@ onMounted(() => {
             <PaginateButtons v-if="props.paginate"
                 class="self-end"
                 :loading="props.loading"
+                :dark="props.dark"
             />
         </div>
 

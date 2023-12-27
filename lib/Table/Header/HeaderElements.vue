@@ -1,58 +1,63 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, inject } from 'vue'
+import { useElementSize } from '@vueuse/core'
 import HeaderSorter from './HeaderSorter.vue'
 import HeaderResizer from './HeaderResizer.vue'
-
-export interface Header {
-    caption: string,
-    sort?: string,
-    filter?: string,
-    classes?: string | any[] | object
-}
+import { type InternalColumn } from '../Table.vue'
 
 interface Props {
     resize: boolean,
     selectable: boolean,
     classes?: string | object | any[]
     scrollable: boolean,
-    headers: Header[],
+    column: InternalColumn,
     sort: boolean,
+    index: number,
+    itemCount: number,
+    rowsPerPage: number,
+    dark: boolean,
+    isLast: boolean
 }
 const props = defineProps<Props>()
 
-const ths = ref([])
+const updateInnerColumnThSize = inject('updateInnerColumnThSize') as Function
 
-const isNotSelectHeader = (index: number) => {
-    return props.selectable ? true : (index + 1) < props.headers.length
-}
+const thRef = ref(null)
+const { width } = useElementSize(thRef)
+
+onMounted(() => updateInnerColumnThSize(props.column.uid, width.value))
 
 </script>
 <template>
-    <th v-for="(header, index) in props.headers"
+    <th v-if="column.caption != 'table_select'"
         :class="[
-            header.classes,
-            {'hover:cursor-pointer': props.sort && header.sort},
+            column.classes,
+            {'hover:cursor-pointer': props.sort && column.key},
             {'resizeable relative': props.resize},
             {'bg-white': props.scrollable},
-            {'pr-6': props.resize && isNotSelectHeader(index)}
+            {'pr-6': props.resize}
         ]"
-        ref="ths"
+        ref="thRef"
         class="whitespace-nowrap pl-2 py-1"
+        :data-th="props.column.uid"
+        :style="{
+            ...(props.column.useExplicitWidth) && {
+                width: props.column.width + 'px'
+            }
+        }"
     >
-
-
         <!-- Sorting handler -->
-        <HeaderSorter v-if="props.sort && header.sort" :header="header" />
+        <HeaderSorter v-if="props.sort && props.column.sort" :dark="props.dark" :column="column" />
 
         <!-- Non-sorting caption -->
         <span v-else class="select-none relative">
-            {{ header.caption }}
+            {{ column.caption }}
         </span>
 
         <!-- Resizing -->
-        <HeaderResizer v-if="props.resize && isNotSelectHeader(index)"
-            :index="index"
-            :ths="ths"
+        <HeaderResizer v-if="props.resize && !props.isLast"
+            :index="props.index"
+            :column="props.column"
         />
         
     </th>

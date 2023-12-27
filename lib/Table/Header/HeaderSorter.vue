@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { inject, type ComputedRef } from 'vue'
-import { type Header } from './HeaderElements.vue'
-import TransitionFade from '../..//Transitions/TransitionFade.vue'
 import FasArrowUpWideShort from '../../Icons/FasArrowUpWideShort.vue'
 import FasArrowDownShortWide from '../../Icons/FasArrowDownShortWide.vue'
+import { inject, type ComputedRef } from 'vue'
+import { type InternalColumn } from '../Table.vue'
+import TransitionFade from '../../Transitions/TransitionFade.vue'
 
 interface Props {
-    header: Header,
+    column: InternalColumn,
+    dark: boolean,
 }
 const props = defineProps<Props>()
 
@@ -16,22 +17,23 @@ const sortingMetric = inject('sortingMetric') as ComputedRef
 const toggleSortDir = inject('toggleSortDir') as Function
 const updateSorting = inject('updateSorting') as Function
 const udpateSortingMetric = inject('updateSortingMetric') as Function
-const dark = inject('dark') as boolean
 
 const sort = (metric: string) => {
-    udpateSortingMetric(metric)
-    updateSorting(true)
-    toggleSortDir()
+    if (props.column.sort) {
+        udpateSortingMetric(metric)
+        updateSorting(true)
+        toggleSortDir()
+    }
 }
 
 </script>
 <template>
     <!-- Header caption -->
     <span class="select-none relative">
-        {{ props.header.caption }}
+        {{ props.column.caption }}
 
         <TransitionFade>
-            <span v-if="sorting && sortingMetric == props.header.sort"
+            <span v-if="sorting && sortingMetric == props.column.key"
                 class="absolute top-[50%] transform -translate-y-[50%] -right-[20px]"
             >
                 <FasArrowDownShortWide v-if="sortAsc"
@@ -46,6 +48,6 @@ const sort = (metric: string) => {
 
     <span
         class="absolute w-full h-full top-0 left-0"
-        @click="sort(props.header.sort ?? '')"
+        @click="sort(props.column.key)"
     ></span>
 </template>

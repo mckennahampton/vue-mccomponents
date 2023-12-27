@@ -5,10 +5,9 @@ import FasCircleCheck from '../../Icons/FasCircleCheck.vue'
 
 interface Props {
     pageItems: any[],
+    dark: boolean,
 }
 const props = defineProps<Props>()
-
-const dark = inject('dark') as boolean
 
 const toggleSelectAll = inject('toggleSelectAll') as (payload: MouseEvent) => void
 const allSelected = inject('allSelected') as ComputedRef

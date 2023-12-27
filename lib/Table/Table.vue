@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import uid from '../Utilities/uid'
-import RowElements from './Row/RowElements.vue'
+import { useElementSize } from '@vueuse/core'
+import RowListHandler from './Row/RowListHandler.vue'
 import { deepValue } from '../Utilities/objectHelpers'
+import VirtualScroller from './Row/VirtualScroller.vue'
 import HeaderElements from './Header/HeaderElements.vue'
 import HeaderSelectAll from './Header/HeaderSelectAll.vue'
-import TableToolbar from './TableToolbar/TableToolbar.vue'
 import { type OrderByEntry } from './TableToolbar/Filters/OrderBy.vue'
+import TableToolbar from './TableToolbar/TableToolbar.vue'
+import { ref, onBeforeMount, computed, watch, useSlots, provide, reactive } from 'vue'
 import { type LengthAwarePaginator } from '../Types/Laravel/LengthAwarePaginator'
-import {
-    ref, onBeforeMount,
-    computed, watch, useSlots, provide
-} from 'vue'
 
 //#region Types
 
@@ -21,13 +20,27 @@ export interface ExternalPaginationFetchArgs {
     end?: Date
 }
 
-export interface Header {
-    caption: string,
-    sort?: string,
-    filter?: string,
-    classes?: string | any[] | object
+export interface CellOptions {
+    classes?: string | any[] | object,
+    suggestedWidth?: number,
+    ellipse?: boolean,
+    useMinimumSpace?: boolean,
 }
 
+export interface Column {
+    caption: string,
+    key: string,
+    classes?: string | any[] | object,
+    cellOptions?: CellOptions,
+    sort?: boolean,
+}
+
+export interface InternalColumn extends Column {
+    uid: string,
+    width: number,
+    slotName: string,
+    useExplicitWidth: boolean,
+}
 
 interface FilterValue {
     value: string | number | boolean | null,
@@ -46,7 +59,7 @@ interface Filter {
 interface Props {
     toolbar?: boolean,
     rowHandling?: 'paginate' | 'scroll'
-    headers: Header[],
+    columns: Column[],
     items: any[],
     sort?: boolean,
     resize?: boolean,
@@ -60,27 +73,24 @@ interface Props {
     reportTitle?: string,
     showExport?: boolean,
     orderBy?: OrderByEntry[],
-    localLogoUrl?: string,
+    itemUid?: string,
     dark?: boolean,
+    localLogoUrl?: string,
 }
 //#endregion
 
 const props = withDefaults(defineProps<Props>(), {
     toolbar: true,
+    showToolbar: true,
     loading: false,
     externalPagination: false,
     showDatePicker: false,
     showExport: false,
-    dark: false
-})
-
-const isDark = ref(props.dark)
-watch(() => props.dark, (newVal, oldVal) => {
-    if (newVal == oldVal) return
-    isDark.value = props.dark
-})
-onBeforeMount(() => {
-    provide('dark', isDark)
+    sort: true,
+    resize: true,
+    selectable: false,
+    dark: false,
+    rowHandling: 'paginate'
 })
 
 const emit = defineEmits([
@@ -101,41 +111,48 @@ const slots = useSlots() // Used to conditional rendering of the action button s
      * stores
      */
 
-     // Misc. Props
+
+    // Misc. Props
     const loading = ref(props.loading)
-    watch(() => props.loading, (newValue, oldValue) => {
-        if (newValue == oldValue) return
-        loading.value = props.loading
-    })
+    watch(props, () => loading.value = props.loading)
     onBeforeMount(() => {
         provide('externalPagination', props.externalPagination)
         provide('loading', loading)
+        provide('itemUid', props.itemUid ?? false)
     })
 
     // Table Transition properties
     type Direction = 'forwards' | 'backwards' | 'none'
     const pageStepDirection = ref('forwards' as Direction)
+    const isTransitioning = ref(false)
     const updatePageStepDirection = (dir: Direction) => {
         pageStepDirection.value = dir
     }
+    const updateIsTransitioning = (val: boolean) => isTransitioning.value = val
     onBeforeMount(() => {
         provide('updatePageStepDirection', updatePageStepDirection)
+        provide('pageStepDirection', pageStepDirection)
+        provide('isTransitioning', isTransitioning)
+        provide('updateIsTransitioning', updateIsTransitioning)
     })
-
 
     // Table UID
     const tableUid = uid()
     const tableConUid = uid()
+    const tableConRef = ref(null)
     onBeforeMount(() => {
         provide('tableUid', tableUid)
         provide('tableConUid', tableConUid)
+        provide('tableConRef', tableConRef)
     })
     // *******************************************************************
 
 
     // Table tempalte ref
     const tableRef = ref(null)
-    provide('tableRef', tableRef)
+    onBeforeMount(() => {
+        provide('tableRef', tableRef)
+    })
     // *******************************************************************
 
 
@@ -170,6 +187,10 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     // Rows Per Page
     const rowsPerPage = ref(10)
     const updateRowsPerPage = (length: number) => {
+
+        if (length > 50) columns.value.forEach(column => column.useExplicitWidth = true)
+        else columns.value.forEach(column => column.useExplicitWidth = false)
+
         rowsPerPage.value = length
         currentPage.value = 1
         updatePageStepDirection('none')
@@ -193,7 +214,6 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     onBeforeMount(() => {
         provide('currentPage', currentPage)
         provide('updateCurrentPage', updateCurrentPage)
-        provide('pageStepDirection', pageStepDirection)
     })
     // *******************************************************************
 
@@ -264,8 +284,9 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     const toggleSortDir = () => {
         sortAsc.value = !sortAsc.value
     }
-    const sortingMetric = ref('')
+    const sortingMetric = ref(null)
     const updateSortingMetric = (metric: string) => {
+        //@ts-ignore
         sortingMetric.value = metric
     }
     const sorting = ref(false)
@@ -290,47 +311,78 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     // *******************************************************************
 
     // Selectable
-    const itemsWithUid = ref([] as any[])
+    export interface SelectState {
+        [key: string]: boolean,
+    }
+    const itemsWithUid = ref([])
+    const selectState = reactive({} as SelectState)
     const preparePropItems = () => {
-        itemsWithUid.value = props.items.map(item => ({
+
+        //@ts-ignore
+        itemsWithUid.value = props.items.map((item, index) => ({
             ...item,
-            [tableUid + '_uid']: uid()
+            [tableUid + '_uid']: props.itemUid ? item[props.itemUid] : uid(),
         }))
+
+        //@ts-ignore
+        itemsWithUid.value.forEach((item, index)=> {
+            //@ts-ignore
+            selectState[item[tableUid + '_uid']] = false
+        })
     }
 
     // Reactively update the internal table items when the props change
     onBeforeMount(() => preparePropItems())
-    watch(() => props.items, (newValue, oldValue) => {
-        if (newValue == oldValue) return
-        preparePropItems()
-    })
+    watch(() => props.items, () => preparePropItems())
 
-    const selected = ref([] as number[])
-    const allSelected = computed(() => pageItems.value.filter(item => !item.disabled).length == selected.value.length)
-    const itemIsSelected = (item: any) => selected.value.some(item_uid => item_uid == item[tableUid + '_uid'])
+    // const selected = ref([] as number[])
+    const selectedCount = computed(() => Object.values(selectState).filter(e => e).length)
+    //@ts-ignore
+    const allDisabled = computed(() => pageItems.value.filter(item => item.disabled).length == pageItems.value.length)
+    // const allSelected = computed(() => pageItems.value.filter(item => !item.disabled).length == selected.value.length && pageItems.value.filter(item => !item.disabled).length > 0)
+    //@ts-ignore
+    const allSelected = computed(() => pageItems.value.filter(item => !item.disabled).length == selectedCount.value && pageItems.value.filter(item => !item.disabled).length > 0)
 
+    // const itemIsSelected = (item: any) => selected.value.some(item_uid => item_uid == item[tableUid + '_uid'])
     const selectedItems = computed(() => {
-        // Remove the uid key in the exposed selectedItems array
-        return itemsWithUid.value.filter(item => itemIsSelected(item)).map(item => {
+        return itemsWithUid.value.filter(item => selectState[item[tableUid + '_uid']]).map(item => {
+            //@ts-ignore
             const o = {...item}
             if (tableUid + '_uid' in o) delete o[tableUid + '_uid']
             return o
         })
-    })
 
+
+        // Remove the uid key in the exposed selectedItems array
+        // return itemsWithUid.value.filter(item => itemIsSelected(item)).map(item => {
+        //     const o = {...item}
+        //     if (tableUid + '_uid' in o) delete o[tableUid + '_uid']
+        //     return o
+        // })
+
+    })
     const toggleSelectItem = (item: any) => {
         if (item.disabled) return
 
-        selected.value.some(item_uid => item_uid == item[tableUid + '_uid'])
-        ? selected.value.splice(selected.value.indexOf(item[tableUid + '_uid']), 1) // De-select
-        : selected.value.push(item[tableUid + '_uid'])
+        //@ts-ignore
+        selectState[item[tableUid + '_uid']] = !selectState[item[tableUid + '_uid']]
+
+        // selected.value.some(item_uid => item_uid == item[tableUid + '_uid'])
+        // ? selected.value.splice(selected.value.indexOf(item[tableUid + '_uid']), 1) // De-select
+        // : selected.value.push(item[tableUid + '_uid'])
+
     }
     const deselectAll = () => {
-        selected.value.length = 0
+        //@ts-ignore
+        Object.keys(selectState).forEach(k => selectState[k] = false)
+
+        // selected.value.length = 0
     }
     const selectAll = () => {
-        deselectAll()
-        pageItems.value.filter(item => !item.disabled).forEach(item => selected.value.push(item[tableUid + '_uid']))
+        //@ts-ignore
+        pageItems.value.filter(item => !item.disabled).forEach(item => selectState[item[tableUid + '_uid']] = true)
+
+        // pageItems.value.filter(item => !item.disabled).forEach(item => selected.value.push(item[tableUid + '_uid']))
     }
     const toggleSelectAll = () => allSelected.value ? deselectAll() : selectAll()
 
@@ -339,17 +391,49 @@ const slots = useSlots() // Used to conditional rendering of the action button s
         provide('toggleSelectAll', toggleSelectAll)
         provide('allSelected', allSelected)
         provide('toggleSelectItem', toggleSelectItem)
-        provide('itemIsSelected', itemIsSelected)
+        // provide('itemIsSelected', itemIsSelected)
         provide('deselectAll', deselectAll)
+        provide('allDisabled', allDisabled)
+        provide('selectState', selectState)
     })
 
-    watch(props, () => deselectAll())
+    watch(() => props.items, () => deselectAll())
     watch(currentPage, () => deselectAll())
     watch(rowsPerPage, () => deselectAll())
     // *******************************************************************
 
     // Resizing
+    const columns = ref([] as InternalColumn[])
+    onBeforeMount(() => {
+        props.columns.forEach(column => {
+            columns.value.push({
+                ...column,
+                width: 0,
+                uid: uid(),
+                slotName: `cell(${column.key})`,
+                useExplicitWidth: false,
+                ...(!column.hasOwnProperty('sort')) && {
+                    sort: true,
+                },
+            })
+        })
+        if (props.selectable) columns.value.push({
+            uid: uid(),
+            width: 0,
+            caption: 'table_select',
+            slotName: `cell(table_select)`,
+            useExplicitWidth: false,
+            key: 'table_select',
+            sort: false,
+        })
+    })
+    const filteredColumns = computed(() => columns.value.filter(column=> column.caption != 'table_select'))
+
+    const virtualScroller = ref(null)
+    const { height: virtualScrollerHeight } = useElementSize(virtualScroller)
     const resizing = ref(false)
+    const rowHeight = ref(0)
+    const updateRowHeight = (val: number) => rowHeight.value = val
     const updateResizing = (val: boolean) => {
         // Delay to avoid selecting everything at the last second
         if (!val) {
@@ -361,16 +445,25 @@ const slots = useSlots() // Used to conditional rendering of the action button s
             resizing.value = val
         }
     }
+
+    const updateInnerColumnThSize = (uid: string, width: number) => {
+        //@ts-ignore
+        columns.value.find(column => column.uid == uid).width = width
+    }
     onBeforeMount(() => {
         provide('updateResizing', updateResizing)
+        provide('updateRowHeight', updateRowHeight)
+        provide('updateInnerColumnThSize', updateInnerColumnThSize)
+        provide('resizing', resizing),
+        provide('virtualScrollerHeight', virtualScrollerHeight)
     })
     // *******************************************************************
 
-    // Exports
     onBeforeMount(() => {
         provide('localLogoUrl', props.localLogoUrl)
-        provide('headers', props.headers)
+        provide('columns', props.columns)
     })
+
 
 //#endregion
 
@@ -386,14 +479,16 @@ const filteredItems = computed(() => {
         return Object.keys(item).some((key) => {
             if (key == 'hash' || key == 'icon' || key == 'path') return false
             return item[key]
+            //@ts-ignore
             ? item[key].toString().toLowerCase().includes(quickFilter.value.toString().toLowerCase())
-            : props.headers.some(header => {
-                return header.filter
-                ? deepValue(header.filter, item).toString().toLowerCase().includes(quickFilter.value.toString().toLowerCase())
+            : props.columns.some(column => {
+                return column.key
+                ? deepValue(column.key, item).toString().toLowerCase().includes(quickFilter.value.toString().toLowerCase())
                 : false
             });
         })
     })
+
 })
 const pageItems = computed(() => {
     let items;
@@ -401,7 +496,7 @@ const pageItems = computed(() => {
     // If items need to be paginated, "fetch" only the current page's items
     // If we are using external pagination, then the provided items are already
     // chunked to the page size, so we don't need to do anything
-    if (!props.externalPagination || props.rowHandling == 'paginate')
+    if (!props.externalPagination && props.rowHandling == 'paginate')
     {
         let start = (currentPage.value - 1) * rowsPerPage.value
         let end = start + rowsPerPage.value
@@ -414,19 +509,24 @@ const pageItems = computed(() => {
     // Sort the items if applicable
     if (props.sort && sorting.value) {
         items.sort((a: object, b: object) => {
+
             let alpha = sortAsc.value ? a : b
             let beta = !sortAsc.value ? a : b
+
+            //@ts-ignore
             return typeof deepValue(sortingMetric.value, alpha) == 'number'
+            //@ts-ignore
             ? deepValue(sortingMetric.value, alpha) - deepValue(sortingMetric.value, beta)
+            //@ts-ignore
             : deepValue(sortingMetric.value, alpha)
                 .toString()
-                .localeCompare(deepValue(sortingMetric.value, beta), undefined, { numeric: true })
+                //@ts-ignore
+                .localeCompare(deepValue(sortingMetric.value, beta).toString(), undefined, { numeric: true })
 
         })
     }
     return items
 })
-
 onBeforeMount(() => {
     provide('filteredItems', filteredItems)
     provide('filtered', filtered)
@@ -435,6 +535,11 @@ onBeforeMount(() => {
 const navigateTo = (page: number) => {
 
     updateCurrentPage(page)
+    laravelFormattedFilters.value = dirtyFormattedFilters.value
+    laravelFormattedOrderBy.value = dirtlaravelFormattedOrderBy.value
+    startDate.value = dirtyStartDate.value
+    endDate.value = dirtyEndDate.value
+
     if (props.externalPagination) {
         let data = {
             page: page,
@@ -465,12 +570,14 @@ provide('navigateTo', navigateTo)
 // Expose refresh method so we can manually refresh the table when necessary
 // from the parent component. Only relevant when working with external pagination
 // and the sorce data was updated
-const refresh = () => {
+const refresh = (firstPage = false) => {
+    if (firstPage) currentPage.value = 1
     navigateTo(currentPage.value)
 }
 defineExpose({
     refresh,
-    selectedItems
+    selectedItems,
+    quickFilter
 })
 
 // Behavioral cleanup
@@ -486,6 +593,7 @@ onBeforeMount(() => {
 // Update displayed items on prop items change
 const sort = (metric: string) => {
     if(props.sort) {
+        //@ts-ignore
         sortingMetric.value = metric
         sorting.value = true
         sortAsc.value = !sortAsc.value
@@ -495,7 +603,8 @@ watch(props, () => {
 
     // Re-sort if items are already sorted
     if (sorting.value) {
-        sortAsc.value = !sortAsc.value 
+        sortAsc.value = !sortAsc.value
+        //@ts-ignore
         sort(sortingMetric.value)
     }
     if(!props.externalPagination) currentPage.value = 1
@@ -506,7 +615,7 @@ watch(props, () => {
 <template>
     <TableToolbar
         :paginate="props.rowHandling == 'paginate'"
-        :show-toolbar="props.toolbar"
+        :toolbar="props.toolbar"
         :external-pagination="props.externalPagination"
         :show-date-picker="props.showDatePicker"
         :show-export="props.showExport"
@@ -514,20 +623,24 @@ watch(props, () => {
         :filters="props.filters"
         :loading="props.loading"
         @reset-sort="resetSort"
+        :items="pageItems"
+        :dark="props.dark"
     >
         <template #actionButton v-if="slots.actionButton">
-            <slot name="actionButton" />
+            <slot name="actionButton" :selectedItems="selectedItems" />
         </template>
 
         <template #table>
             <div
                 class="w-full relative"
                 :class="[
-                    {'overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent border-y-2 border-t-neutral-200': props.rowHandling == 'scroll' },
-                    {'overflow-y-hidden': props.rowHandling !== 'scroll'}
+                    {'overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent border-y-2 border-t-neutral-200': props.rowHandling == 'scroll'},
+                    {'overflow-y-hidden': props.rowHandling != 'scroll' && pageItems.length <= 50},
+                    {'!h-auto': pageItems.length > 50}
                 ]"
-                :style="{ maxHeight: props.rowHandling == 'scroll' ? ((props.scrollableMaxHeight ?? 500) + 'px') : 'none' }"
+
                 :id="tableConUid"
+                ref="tableConRef"
             >
                 <table
                     :class="[{'select-none': resizing}]"
@@ -535,53 +648,84 @@ watch(props, () => {
                     ref="tableRef"
                     v-bind="$attrs"
                     :id="tableUid"
+                    data-regular-scroller
                 >
                     <thead
                         ref="thead"
-                        class="border-y-2"
+                        class="border-y-2 max-sm:hidden z-[2] relative"
                         :class="[
-                            {'sticky -top-[1px] z-10 !border-0': props.rowHandling == 'scroll'},
-                            props.dark ? 'border-y-neutral-700' : 'border-y-neutral-400'
+                            {'sticky -top-[1px]': props.rowHandling == 'scroll'},
+                            {'flex flex-col': pageItems.length > 50},
+                            {'border-y-neutral-200': !props.dark},
+                            {'border-y-neutral-800': props.dark}
                         ]"
                     >
                         <tr>
-                            <HeaderElements
+                            <HeaderElements v-for="(column, index) in columns"
                                 :resize="props.resize"
                                 :selectable="props.selectable"
-                                :scrollable="props.rowHandling == 'scroll'"
-                                :headers="props.headers"
+                                :scrollable="props.rowHandling == 'scroll' || pageItems.length > 50"
+                                :column="column"
                                 :sort="props.sort"
+                                :index="index"
+                                :item-count="pageItems.length"
+                                :rows-per-page="rowsPerPage"
+                                :dark="props.dark"
+                                :is-last="(index + 2) == columns.length"
                             />
 
                             <HeaderSelectAll v-if="props.selectable"
                                 :page-items="pageItems"
-                                :class="{'bg-white': props.rowHandling == 'scroll'}"
+                                :class="{'bg-white': props.rowHandling == 'scroll' || pageItems.length > 50}"
+                                :dark="props.dark"
                             />
                         </tr>
                     </thead>
 
-                    <RowElements v-if="!props.loading"
-                        :headers="props.headers"
+                    <RowListHandler v-if="pageItems.length <= 50"
+                        :columns="columns"
                         :items="pageItems"
                         :row-classes="props.rowClasses"
+                        :scroll="props.rowHandling == 'scroll'"
                         :loading="props.loading"
+                        :dark="props.dark"
                     >
-                        <template #rows="{item}">
-                            <slot name="rows" :item="item" />
+                        <template v-for="column in filteredColumns" #[column.slotName]="{item}">
+                            <slot
+                                :name="column.slotName"
+                                :item="item"
+                            />
                         </template>
-                    </RowElements>
-
+                    </RowListHandler>
                 </table>
-
             </div>
+            <VirtualScroller v-if="pageItems.length > 50"
+                :items="pageItems"
+                :columns="columns"
+                :row-classes="props.rowClasses"
+                :scroll="props.rowHandling == 'scroll'"
+                :loading="props.loading"
+                :row-height="rowHeight"
+                :dark="props.dark"
+                ref="virtualScroller"
+            >
+                <template v-for="column in filteredColumns" #[column.slotName]="{item}">
+                    <slot
+                        :name="column.slotName"
+                        :item="item"
+                    />
+                </template>
+            </VirtualScroller>
+        </template>
+
+        <template v-if="slots.footer" #footer="{items}">
+            <slot name="footer" :items="items" />
         </template>
 
     </TableToolbar>
 
 </template>
 <style scoped>
-
-
 
 table {
     @apply
@@ -600,7 +744,7 @@ thead {
     text-[15px] border-t-[1px]
 
     /* Responsive - Each cell will have a prefix with the header caption */
-    hidden md:table-header-group
+    /* hidden md:table-header-group */
 
     /* Print */
     print:table-header-group
@@ -617,19 +761,6 @@ table :deep(tbody) {
     print:table-row-group print:float-none print:overflow-x-hidden
 }
 
-/* tr */
-table :deep(tbody tr) {
-    @apply
-    
-    /* Mobile */
-    flex flex-wrap items-stretch justify-stretch
-    w-full max-w-[500px]
-    
-    /* Desktop */
-    md:table-row
-    print:table-row
-}
-
 /* td */
 
 table :deep(tbody tr td.selectButton),
@@ -640,44 +771,29 @@ table :deep(thead tr th.selectButton) {
     flex w-full text-sm p-0
 
     /* Desktop */
-    md:table-cell md:w-auto md:py-1 md:pl-2
+    md:table-cell md:py-1 md:pl-2
     print:table-cell print:w-auto print:py-1 print:pl-2
 
 }
 
-table :deep(tbody tr td:not(.selectButton)) {
-    @apply
-    
-    /* Mobile */
-    flex flex-col items-stretch
-    justify-stretch w-full col-span-full relative
 
+/* #region Row Transitions */
+
+.rows-enter-active,
+.rows-leave-active {
+    transition: all 0.2s ease;
+    overflow-x: hidden;
+}
+.rows-leave-active {
+    display:none
+}
+.rows-enter-from,
+.rows-leave-to {
+  opacity: 0;
+  /* transform: translateX(30px); */
 }
 
-table :deep(tbody tr td:not(.selectButton)) {
-    @apply relative border-b-[1px] border-b-neutral-300 last:border-b-0 pt-7 pb-2 md:py-2
-
-    /* Desktop */
-    md:border-b-0 md:table-cell md:w-auto md:max-w-[150px] lg:max-w-[250px] xl:max-w-[450px]
-    print:border-b-0 print:table-cell print:w-auto print:max-w-[450px]
-}
-
-table :deep(tr td:not(.selectButton)) {
-    @apply
-
-    before:content-[attr(header)] before:absolute before:top-0 before:left-0
-    before:whitespace-nowrap before:pl-2 before:pt-2
-    before:w-full before:leading-tight before:text-black
-    before:font-bold before:text-[13px]
-
-    /* Desktop */
-    md:before:hidden
-    print:before:hidden
-}
-/* .dark table :deep(tr td:not(.selectButton))::before {
-    @apply text-neutral-400
-} */
-
+/* #endregion */
 
 /* #region Print styles */
 

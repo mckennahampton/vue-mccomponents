@@ -5,7 +5,7 @@ import * as autoTable from 'jspdf-autotable'
 import FasFilePdf from '../../Icons/FasFilePdf.vue'
 import { toBase64 } from '../../Utilities/fileHelpers'
 import MutedButton from '../../Buttons/MutedButton.vue'
-import { type Header } from '../Table.vue'
+import { type Column } from '../Table.vue'
 
 const props = defineProps<{
     reportTitle?: string,
@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const tableUid = inject('tableUid') as string
 const localLogoUrl = inject('localLogoUrl') as string
-const headers = inject('headers') as Header[]
+const columns = inject('columns') as Column[]
 
 const exportToPdf = async () => {
 
@@ -30,7 +30,7 @@ const exportToPdf = async () => {
         headStyles: {
             fillColor: '#000000'
         },
-        columns: headers.map(header => ({ header: header.caption })), // This will strip out the "Selected" column if necessary
+        columns: columns.map(column => ({ header: column.caption })), // This will strip out the "Selected" column if necessary
         didDrawPage: function (data) {
             // Header
             doc.setTextColor(40)

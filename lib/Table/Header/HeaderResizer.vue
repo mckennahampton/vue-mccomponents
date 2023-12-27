@@ -1,21 +1,25 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core'
+import { type InternalColumn } from '../Table.vue'
 import { reactive, inject, type Ref } from 'vue'
 
 interface Props {
     index: number,
+    column: InternalColumn
 }
 const props = defineProps<Props>()
 
-const updateResizing = inject('updateResizing') as Function
 const tableUid = inject('tableUid') as string
+const updateResizing = inject('updateResizing') as Function
+const updateInnerColumnThSize = inject('updateInnerColumnThSize') as Function
+
 
 const resizeState = reactive({
-    pageXWidth: 0,
-    curTh: {} as HTMLElement,
-    nextTh: {} as HTMLElement,
-    curThWidth: 0,
-    nextThWidth: 0,
+    pageXWidth: 0 as number,
+    curTh: {} as Element,
+    nextTh: {} as Element,
+    curThWidth: 0 as number,
+    nextThWidth: 0 as number,
 })
 
 const getStyleVal = (el: Element, css: string) => {
@@ -31,15 +35,17 @@ const paddingDiff = (th: Element) => {
     return parseInt(padLeft) + parseInt(padRight)
 }
 
-const resizeMouseDown = (e: MouseEvent, index: number) => {
+const resizeMouseDown = (e: MouseEvent) => {
     updateResizing(true)
-    resizeState.curTh = document.querySelector(`#${tableUid} thead th:nth-child(${index})`) ?? {} as HTMLElement
-    resizeState.nextTh = document.querySelector(`#${tableUid} thead th:nth-child(${index + 1})`) ?? {} as HTMLElement
+    resizeState.curTh = document.querySelector(`#${tableUid} [data-th=${props.column.uid}]`) ?? {} as Element
+    resizeState.nextTh = document.querySelector(`#${tableUid} [data-th=${props.column.uid}] + [data-th]`) ?? {} as Element
     resizeState.pageXWidth = e.pageX
     let padding = paddingDiff(resizeState.curTh)
 
+    //@ts-ignore
     resizeState.curThWidth = resizeState.curTh.offsetWidth - padding
     if (resizeState.nextTh) {
+        //@ts-ignore
         resizeState.nextThWidth = resizeState.nextTh.offsetWidth - padding
     }
     document.addEventListener('mousemove', resizeMouseMove, true)
@@ -50,17 +56,21 @@ const resizeMouseMove = (e: MouseEvent) => {
     if (resizeState.curTh) {
         let diff = e.pageX - resizeState.pageXWidth
         if (resizeState.nextTh) {
+            //@ts-ignore
             resizeState.nextTh.style.width = (resizeState.nextThWidth - diff)+'px'
+            updateInnerColumnThSize(resizeState.nextTh.getAttribute('data-th'), resizeState.nextThWidth - diff)
         }
+        //@ts-ignore
         resizeState.curTh.style.width = (resizeState.curThWidth + diff)+'px'
+        updateInnerColumnThSize(props.column.uid, resizeState.curThWidth + diff)
     }
 }
 
 const resetResizeState = () => {
     updateResizing(false)
-    resizeState.curTh = {} as HTMLElement
+    resizeState.curTh = {} as Element
     resizeState.curThWidth = 0
-    resizeState.nextTh = {} as HTMLElement
+    resizeState.nextTh = {} as Element
     resizeState.nextThWidth = 0
     resizeState.pageXWidth = 0
     document.removeEventListener('mouseup', resetResizeState, true)
@@ -68,15 +78,17 @@ const resetResizeState = () => {
     document.getSelection()?.removeAllRanges()
 }
 
-const tableRef = inject('tableRef') as Ref<HTMLElement>
-const { height: tableHeight } = useElementSize(tableRef)
+const tableConRef = inject('tableConRef') as Ref<HTMLElement>
+const virtualScrollerHeight = inject('virtualScrollerHeight') as Ref<number>
+const { height: tableHeight } = useElementSize(tableConRef)
+
 </script>
 <template>
     <span
-        class="absolute top-0 -right-[6px] flex items-stretch hover:cursor-col-resize group px-1 z-[2]"
-        :style="{ height: tableHeight + 'px' }"
+        class="absolute top-0 -right-[6px] flex items-stretch hover:cursor-col-resize group px-1"
+        :style="{ height: tableHeight + virtualScrollerHeight + 'px' }"
         @click.stop
-        @mousedown="(e) => resizeMouseDown(e, props.index + 1)"
+        @mousedown="(e) => resizeMouseDown(e)"
     >
         <span class="w-[2px]"></span>
         <span class="w-[2px] group-hover:bg-neutral-300"></span>
