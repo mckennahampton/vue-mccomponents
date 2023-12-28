@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import FasArrowUpWideShort from '../../Icons/FasArrowUpWideShort.vue'
-import FasArrowDownShortWide from '../../Icons/FasArrowDownShortWide.vue'
 import { inject, type ComputedRef } from 'vue'
 import { type InternalColumn } from '../Table.vue'
 import TransitionFade from '../../Transitions/TransitionFade.vue'
+import FasArrowUpWideShort from '../../Icons/FasArrowUpWideShort.vue'
+import FasArrowDownShortWide from '../../Icons/FasArrowDownShortWide.vue'
 
 interface Props {
     column: InternalColumn,

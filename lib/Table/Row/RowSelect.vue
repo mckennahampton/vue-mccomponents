@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { inject } from 'vue'
+import { type SelectState } from '../Table.vue'
 import FarCircleCheck from '../../Icons/FarCircleCheck.vue'
 import FasCircleCheck from '../../Icons/FasCircleCheck.vue'
 import PrimaryButton from '../../Buttons/PrimaryButton.vue'
-import { type SelectState } from '../Table.vue'
 
 interface Props {
     item: any,

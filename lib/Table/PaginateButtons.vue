@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import Tooltip from '../Tooltip.vue'
 import { computed, inject, type ComputedRef } from 'vue'
-import FasBackwardStep from '../Icons/FasBackwardStep.vue'
 import FasChevronLeft from '../Icons/FasChevronLeft.vue'
-import FasChevronRight from '../Icons/FasChevronRight.vue'
 import FasForwardStep from '../Icons/FasForwardStep.vue'
+import FasBackwardStep from '../Icons/FasBackwardStep.vue'
+import FasChevronRight from '../Icons/FasChevronRight.vue'
 
 interface Props {
     loading: boolean,

@@ -6,10 +6,10 @@ import { deepValue } from '../Utilities/objectHelpers'
 import VirtualScroller from './Row/VirtualScroller.vue'
 import HeaderElements from './Header/HeaderElements.vue'
 import HeaderSelectAll from './Header/HeaderSelectAll.vue'
-import { type OrderByEntry } from './TableToolbar/Filters/OrderBy.vue'
 import TableToolbar from './TableToolbar/TableToolbar.vue'
-import { ref, onBeforeMount, computed, watch, useSlots, provide, reactive } from 'vue'
+import { type OrderByEntry } from './TableToolbar/Filters/OrderBy.vue'
 import { type LengthAwarePaginator } from '../Types/Laravel/LengthAwarePaginator'
+import { ref, onBeforeMount, computed, watch, useSlots, provide, reactive } from 'vue'
 
 //#region Types
 
@@ -314,7 +314,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     export interface SelectState {
         [key: string]: boolean,
     }
-    const itemsWithUid = ref([])
+    const itemsWithUid = ref([] as any[])
     const selectState = reactive({} as SelectState)
     const preparePropItems = () => {
 
@@ -335,54 +335,30 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     onBeforeMount(() => preparePropItems())
     watch(() => props.items, () => preparePropItems())
 
-    // const selected = ref([] as number[])
     const selectedCount = computed(() => Object.values(selectState).filter(e => e).length)
-    //@ts-ignore
     const allDisabled = computed(() => pageItems.value.filter(item => item.disabled).length == pageItems.value.length)
-    // const allSelected = computed(() => pageItems.value.filter(item => !item.disabled).length == selected.value.length && pageItems.value.filter(item => !item.disabled).length > 0)
-    //@ts-ignore
     const allSelected = computed(() => pageItems.value.filter(item => !item.disabled).length == selectedCount.value && pageItems.value.filter(item => !item.disabled).length > 0)
 
     // const itemIsSelected = (item: any) => selected.value.some(item_uid => item_uid == item[tableUid + '_uid'])
     const selectedItems = computed(() => {
+
+        // Remove the uid key in the exposed selectedItems array
         return itemsWithUid.value.filter(item => selectState[item[tableUid + '_uid']]).map(item => {
-            //@ts-ignore
             const o = {...item}
             if (tableUid + '_uid' in o) delete o[tableUid + '_uid']
             return o
         })
 
-
-        // Remove the uid key in the exposed selectedItems array
-        // return itemsWithUid.value.filter(item => itemIsSelected(item)).map(item => {
-        //     const o = {...item}
-        //     if (tableUid + '_uid' in o) delete o[tableUid + '_uid']
-        //     return o
-        // })
-
     })
     const toggleSelectItem = (item: any) => {
         if (item.disabled) return
-
-        //@ts-ignore
         selectState[item[tableUid + '_uid']] = !selectState[item[tableUid + '_uid']]
-
-        // selected.value.some(item_uid => item_uid == item[tableUid + '_uid'])
-        // ? selected.value.splice(selected.value.indexOf(item[tableUid + '_uid']), 1) // De-select
-        // : selected.value.push(item[tableUid + '_uid'])
-
     }
     const deselectAll = () => {
-        //@ts-ignore
         Object.keys(selectState).forEach(k => selectState[k] = false)
-
-        // selected.value.length = 0
     }
     const selectAll = () => {
-        //@ts-ignore
         pageItems.value.filter(item => !item.disabled).forEach(item => selectState[item[tableUid + '_uid']] = true)
-
-        // pageItems.value.filter(item => !item.disabled).forEach(item => selected.value.push(item[tableUid + '_uid']))
     }
     const toggleSelectAll = () => allSelected.value ? deselectAll() : selectAll()
 
@@ -391,7 +367,6 @@ const slots = useSlots() // Used to conditional rendering of the action button s
         provide('toggleSelectAll', toggleSelectAll)
         provide('allSelected', allSelected)
         provide('toggleSelectItem', toggleSelectItem)
-        // provide('itemIsSelected', itemIsSelected)
         provide('deselectAll', deselectAll)
         provide('allDisabled', allDisabled)
         provide('selectState', selectState)
@@ -479,7 +454,6 @@ const filteredItems = computed(() => {
         return Object.keys(item).some((key) => {
             if (key == 'hash' || key == 'icon' || key == 'path') return false
             return item[key]
-            //@ts-ignore
             ? item[key].toString().toLowerCase().includes(quickFilter.value.toString().toLowerCase())
             : props.columns.some(column => {
                 return column.key
@@ -493,7 +467,7 @@ const filteredItems = computed(() => {
 const pageItems = computed(() => {
     let items;
 
-    // If items need to be paginated, "fetch" only the current page's items
+    // If items need to be paginated, slice only the current page's items
     // If we are using external pagination, then the provided items are already
     // chunked to the page size, so we don't need to do anything
     if (!props.externalPagination && props.rowHandling == 'paginate')
@@ -652,7 +626,7 @@ watch(props, () => {
                 >
                     <thead
                         ref="thead"
-                        class="border-y-2 max-sm:hidden z-[2] relative"
+                        class="border-y-2 max-md:hidden z-[2] relative"
                         :class="[
                             {'sticky -top-[1px]': props.rowHandling == 'scroll'},
                             {'flex flex-col': pageItems.length > 50},

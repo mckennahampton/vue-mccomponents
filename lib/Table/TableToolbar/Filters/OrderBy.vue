@@ -122,7 +122,7 @@ defineExpose({
 </script>
 <template>
     <InputGroup>
-        <div class="flex items-center justify-between gap-5">
+        <div class="flex flex-col md:flex-row max-md:mt-4 max-md:mb-5 items-center justify-between md:gap-5">
             <Select
                 button-classes="pb-1 pt-5 min-w-[175px]"
                 :items="entries"

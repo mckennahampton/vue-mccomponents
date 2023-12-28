@@ -262,7 +262,7 @@
                     class="absolute z-30 flex flex-col items-stretch text-sm shadow-xl max-w-[90vw] xs:max-w-min"
                     :class="[
                         props.dropdownClasses,
-                        props.dark ? 'bg-zinc-950' : 'bg-white'
+                        props.dark ? 'bg-zinc-950 shadow-neutral-950' : 'bg-white'
                     ]"
                     :style="{
                         top: dropdownTop + 'px',

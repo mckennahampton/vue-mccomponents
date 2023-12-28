@@ -5,19 +5,29 @@ const props = defineProps<{
     column: InternalColumn
     item: any,
     itemCount: number,
+    dark: boolean,
+    index: number,
+    isSelected: boolean,
 }>()
-
 </script>
 <template>
     <component :is="props.itemCount > 50 ? 'div' : 'td'"
         :header="props.column.caption"
-        class="py-1 pl-2 max-md:!w-full max-md:!max-w-none max-md:!min-w-non"
+        class="py-2 pl-2 max-md:!w-full max-md:!max-w-none max-md:!min-w-non max-md:min-h-[50px] max-md:border-t max-md:first:border-t-0 max-md:last:border-t-0"
         :class="[
             props.column?.cellOptions?.classes,
             props.column?.cellOptions?.useMinimumSpace && props.itemCount <= 50 ? 'md:!w-[1px]' : 'md:!w-auto md:max-w-[50px]',
-            {'ellipse': props.column.cellOptions?.ellipse },
+            {'overflow-hidden text-ellipsis whitespace-nowrap': props.column.cellOptions?.ellipse },
             {'md:!table-cell': props.itemCount <= 50},
-            {'md:!block md:!max-w-none': props.itemCount > 50}
+            {'md:!block md:!max-w-none': props.itemCount > 50},
+            {'before:text-neutral-800 border-t-neutral-300': !props.dark && props.index % 2 == 0 && !props.isSelected /* Light, odd, unselected */},
+            {'before:text-neutral-800 border-t-cyan-500': !props.dark && props.index % 2 == 0 && props.isSelected /* Light, odd, selected */},
+            {'before:text-neutral-800 border-t-neutral-400': !props.dark && props.index % 2 != 0 && !props.isSelected /*Light, even, unselected */},
+            {'before:text-neutral-800 border-t-cyan-600': !props.dark && props.index % 2 != 0 && props.isSelected /*Light, even, selected */},
+            {'before:text-neutral-500 border-t-neutral-800': props.dark && props.index % 2 == 0 && !props.isSelected /*Dark, odd, unselected  */},
+            {'before:text-cyan-500 border-t-cyan-800': props.dark && props.index % 2 == 0 && props.isSelected /*Dark, odd, selected  */},
+            {'before:text-neutral-500 border-t-neutral-700': props.dark && props.index % 2 != 0 && !props.isSelected /*Dark, even, unselected */ },
+            {'before:text-cyan-400 border-t-cyan-600': props.dark && props.index % 2 != 0 && props.isSelected /*Dark, even, selected */ }
         ]"
         :style="{
             ...(props.itemCount > 50 && {
@@ -55,7 +65,7 @@ const props = defineProps<{
 [data-cell] {
     @apply
     before:content-[attr(header)] before:relative before:whitespace-nowrap
-    before:w-full before:leading-tight before:text-black
+    before:w-full before:leading-tight
     before:font-bold before:text-[13px]
 
     /* Desktop */

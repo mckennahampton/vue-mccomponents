@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core'
-import { type InternalColumn } from '../Table.vue'
 import { reactive, inject, type Ref } from 'vue'
+import { type InternalColumn } from '../Table.vue'
 
 interface Props {
     index: number,

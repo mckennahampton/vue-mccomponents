@@ -1,23 +1,25 @@
 <script setup lang="ts">
 import VR from '../../Layout/VR.vue'
-import Input from '../../Inputs/Input.vue'
-import Accordion from '../../Accordion/Accordion.vue'
-import MutedButton from '../../Buttons/MutedButton.vue'
-import OrderBy, { type OrderByEntry } from './Filters/OrderBy.vue'
-import AccordionItem from '../../Accordion/AccordionItem.vue'
-import PaginateButtons from '../PaginateButtons.vue'
 import ExportCsv from './ExportCsv.vue'
 import ExportPdf from './ExportPdf.vue'
-import { ref, useSlots, inject, onMounted, type ComputedRef, watch } from 'vue'
 import PrintTable from './PrintTable.vue'
-import TransitionFade from '../../Transitions/TransitionFade.vue'
+import Input from '../../Inputs/Input.vue'
 import RowsPerPage from './RowsPerPage.vue'
-import TableDates from './Filters/TableDates.vue'
-import { type LengthAwarePaginator } from '../../Types/Laravel/LengthAwarePaginator'
-import TableFilters, { type Filter} from './Filters/TableFilters.vue'
-import FasFilter from '../../Icons/FasFilter.vue'
-import FasCaretDown from '../../Icons/FasCaretDown.vue'
 import QueryDetails from './QueryDetails.vue'
+import TableDates from './Filters/TableDates.vue'
+import FasFilter from '../../Icons/FasFilter.vue'
+import PaginateButtons from '../PaginateButtons.vue'
+import Accordion from '../../Accordion/Accordion.vue'
+import MutedButton from '../../Buttons/MutedButton.vue'
+import FasCaretDown from '../../Icons/FasCaretDown.vue'
+import AccordionItem from '../../Accordion/AccordionItem.vue'
+import TransitionFade from '../../Transitions/TransitionFade.vue'
+import OrderBy, { type OrderByEntry } from './Filters/OrderBy.vue'
+import TableFilters, { type Filter} from './Filters/TableFilters.vue'
+import { ref, useSlots, inject, onMounted, type ComputedRef, watch } from 'vue'
+import { type LengthAwarePaginator } from '../../Types/Laravel/LengthAwarePaginator'
+import DropdownButton from '../../Buttons/DropdownButton.vue'
+import FasBars from '../../Icons/FasBars.vue'
 
 interface Props {
     toolbar: boolean,
@@ -114,16 +116,19 @@ onMounted(() => {
                         <template #header="{toggle, isOpen}">
 
                             <!-- Row Options Selector -->
-                            <div class="flex w-full max-w-[500px] md:max-w-none items-center justify-between md:justify-start gap-5 mb-5 md:mb-0">
+                            <div class="flex w-full lg:max-w-none items-center justify-between lg:justify-start lg:gap-5 mb-5 lg:mb-0">
+                                
                                 <!-- Quick Filter -->
                                 <Input
                                     placeholder="Filter Visible Rows..."
                                     v-model="textFilter"
-                                    class="w-[200px] md:w-auto !border-x-0 !border-t-0 !outline-none !shadow-[none]"
+                                    class="max-md:w-[200px] md:w-auto !border-x-0 !border-t-0 !outline-none !shadow-[none]"
                                     :class="[
                                         dark ? 'text-white' : 'text-black'
                                     ]"
                                 />
+
+                                <!-- Reset Filter -->
                                 <MutedButton v-if="filtered"
                                     @click="resetFilter"
                                     class="italic whitespace-nowrap text-cyan-500"
@@ -131,10 +136,13 @@ onMounted(() => {
                                     Reset
                                 </MutedButton>
 
-                                <VR />
+                                <VR class="max-lg:hidden" />
+
+                                <!-- Desktop menu buttons -->
 
                                 <!-- Rows per page button -->
                                 <RowsPerPage
+                                    class="max-lg:hidden"
                                     :dark="dark"
                                     :external-pagination="props.externalPagination"
                                     v-model:rows-per-page="rowsPerPage"
@@ -142,35 +150,64 @@ onMounted(() => {
 
                                 <!-- Export buttons -->
                                 <template v-if="props.showExport">
-                                    <VR />
-                                    <ExportCsv :dark="dark" :report-title="props.reportTitle" />
-                                    <ExportPdf :dark="dark" :report-title="props.reportTitle" />
-                                    <PrintTable :dark="dark" />
+                                    <VR class="max-lg:hidden" />
+                                    <ExportCsv class="max-lg:hidden" :dark="dark" :report-title="props.reportTitle" />
+                                    <ExportPdf class="max-lg:hidden" :dark="dark" :report-title="props.reportTitle" />
+                                    <PrintTable class="max-lg:hidden" :dark="dark" />
                                 </template>
+
+                                <!-- /Desktop menu buttons -->
 
                                 <!-- Filter bar toggle -->
                                 <template v-if="props.showDatePicker || props.filters">
-                                    <VR />
-                                    <span
-                                        class="flex items-center justify-center gap-2 hover:cursor-pointer py-1 px-2"
-                                        :class="[
-                                            {'bg-neutral-800': isOpen && dark},
-                                            {'bg-neutral-100': isOpen && !dark},
-                                            dark ? 'hover:bg-neutral-800' : 'hover:bg-neutral-100'
-                                        ]"
-                                        @click="toggle"
-                                    >
-                                        <FasFilter :class="[dark ? 'fill-neutral-100' : 'fill-black']" />
-                                        Filters
-                                        <FasCaretDown
+                                    <VR class="max-lg:hidden" />
+                                    <div class="flex items-center justify-center gap-3">
+
+                                        <!-- Mobile menu buttons-->
+                                        <DropdownButton :dark="props.dark" class="lg:hidden justify-self-end">
+                                            <template #button>
+                                                <FasBars :class="[props.dark ? 'fill-white' : 'fill-black']" />
+                                            </template>
+                                            <template #dropdown>
+                                                <!-- Rows per page button -->
+                                                <RowsPerPage
+                                                    :dark="dark"
+                                                    :external-pagination="props.externalPagination"
+                                                    v-model:rows-per-page="rowsPerPage"
+                                                />
+
+                                                <!-- Export buttons -->
+                                                <template v-if="props.showExport">
+                                                    <VR />
+                                                    <ExportCsv :dark="dark" :report-title="props.reportTitle" />
+                                                    <ExportPdf :dark="dark" :report-title="props.reportTitle" />
+                                                    <PrintTable :dark="dark" />
+                                                </template>
+                                            </template>
+                                        </DropdownButton>
+
+                                        <!-- Filters button -->
+                                        <span
+                                            class="flex items-center justify-center gap-2 hover:cursor-pointer py-1 px-2"
                                             :class="[
-                                                {'rotate-180': isOpen},
-                                                dark ? 'fill-neutral-100' : 'fill-black'
+                                                {'bg-neutral-800': isOpen && dark},
+                                                {'bg-neutral-100': isOpen && !dark},
+                                                dark ? 'hover:bg-neutral-800' : 'hover:bg-neutral-100'
                                             ]"
-                                            class="fa-fw transition-all hover:cursor-pointer"
                                             @click="toggle"
-                                        />
-                                    </span>
+                                        >
+                                            <FasFilter :class="[dark ? 'fill-neutral-100' : 'fill-black']" />
+                                            Filters
+                                            <FasCaretDown
+                                                :class="[
+                                                    {'rotate-180': isOpen},
+                                                    dark ? 'fill-neutral-100' : 'fill-black'
+                                                ]"
+                                                class="fa-fw transition-all hover:cursor-pointer"
+                                                @click="toggle"
+                                            />
+                                        </span>
+                                    </div>
                                 </template>
                             </div>
 
@@ -179,28 +216,37 @@ onMounted(() => {
                         <!-- Filter toolbar -->
                         <template #panel v-if="props.showDatePicker || props.filters">
                             <div
-                                class="flex gap-3 items-center justify-between w-full py-5 px-8 border-l-2 mt-3 shadow-inner"
+                                class="flex flex-col md:flex-row gap-3 items-center justify-between w-full py-5 px-8 border-l-2 mt-3 shadow-inner"
                                 :class="[
                                     dark ? 'border-neutral-800 shadow-neutral-900' : 'border-neutral-400 shadow-neutral-200',
                                 ]">
-                                <div class="flex flex-wrap gap-10 items-center justify-start">
-                                    <span class="flex items-center justify-between gap-8">
-                                        <TableDates v-if="props.showDatePicker"
-                                            :dark="dark"
-                                            ref="tableDatesRef"
-                                        />
+                                <div class="flex flex-col lg:flex-row flex-wrap gap-10 items-center justify-start">
+                                    <span class="flex flex-col lg:flex-row items-center justify-between gap-16 md:gap-8">
+                                        <span class="flex items-center justify-center gap-5 flex-col md:flex-row">
+                                            <TableDates v-if="props.showDatePicker"
+                                                :dark="dark"
+                                                ref="tableDatesRef"
+                                            />
+                                        </span>
+
                                         <template v-if="orderByEntries">
-                                            <VR />
+                                            <VR class="max-lg:hidden" />
                                             <OrderBy ref="orderByRef" :dark="dark" />
                                         </template>
                                     </span>
-                                    <span v-if="props.filters" class="w-full flex flex-wrap items-center justify-start gap-8">
-                                        <TableFilters
-                                            :filters="props.filters"
-                                            :dark="dark"
-                                            ref="tableFiltersRef"
-                                        />
-                                    </span>
+                                    <template v-if="props.filters">
+                                        <span class="flex flex-col gap-5">
+                                            <span class="md:hidden w-full text-start font-bold" :class="[props.dark ? 'text-white' : 'text-black']">Filters</span>
+                                            <span class="w-full flex flex-col md:flex-row flex-wrap items-center justify-start gap-8">
+                                                <TableFilters
+                                                    :filters="props.filters"
+                                                    :dark="dark"
+                                                    ref="tableFiltersRef"
+                                                />
+                                            </span>
+                                        </span>
+
+                                    </template>
 
                                 </div>
 

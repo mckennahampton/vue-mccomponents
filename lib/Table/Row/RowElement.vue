@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import RowSelect from './RowSelect.vue'
 import Tooltip from '../../Tooltip.vue'
-import { type InternalColumn, type SelectState } from '../Table.vue'
 import { inject, ref, type ComputedRef, onMounted } from 'vue'
+import { type InternalColumn, type SelectState } from '../Table.vue'
 import Cell from './Cell.vue'
 
 interface Props {
@@ -29,7 +29,7 @@ onMounted(() => updateRowHeight(tableRowRef.value?.offsetHeight))
 </script>
 <template>
         <component :is="itemCount > 50 ? 'div' : 'tr'"
-            class="max-sm:h-[10px] relative py-4 md:py-0 max-md:flex max-md:flex-wrap items-stretch justify-stretch w-full max-w-[500px] md:max-w-none !bg-opacity-50"
+            class="relative py-4 md:py-0 max-md:flex max-md:flex-wrap items-stretch justify-stretch w-full max-w-[500px] md:max-w-none !bg-opacity-50"
             :class="[
                 {'!bg-cyan-300': selectable && selectState[item[tableUid + '_uid']] && index % 2 == 0 && !props.dark /* Even (Selected) */},
                 {'!bg-cyan-800': selectable && selectState[item[tableUid + '_uid']] && index % 2 == 0 && props.dark /* Even (Selected, Dark) */},
@@ -54,7 +54,15 @@ onMounted(() => updateRowHeight(tableRowRef.value?.offsetHeight))
             <!-- Main row content -->
             <template v-for="column in props.columns">
                 <template v-if="column.caption != 'table_select'">
-                    <Cell :column="column" :item="item" :item-count="props.itemCount" :row-height="props.rowHeight">
+                    <Cell
+                        :column="column"
+                        :item="item"
+                        :item-count="props.itemCount"
+                        :row-height="props.rowHeight"
+                        :dark="props.dark"
+                        :index="props.index"
+                        :is-selected="selectable && selectState[item[tableUid + '_uid']]"
+                    >
                         <template #[column.slotName]="{item}" >
                             <slot
                                 :name="column.slotName"

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, inject, type ComputedRef, watch } from 'vue'
+import { useElementSize } from '@vueuse/core'
 import { type InternalColumn } from '../../Table.vue'
+import { ref, inject, type ComputedRef, watch } from 'vue'
 import TableRowSkeleton from '../../../Skeletons/Table/TableRowSkeleton.vue'
 import { type LengthAwarePaginator } from '../../../Types/Laravel/LengthAwarePaginator'
-import { useElementSize } from '@vueuse/core'
 
 const props = withDefaults(defineProps<{
     direction?: 'forwards' | 'backwards' | 'none',

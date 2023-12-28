@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { inject } from 'vue'
 import FasPrint from '../../Icons/FasPrint.vue'
 import MutedButton from '../../Buttons/MutedButton.vue'
 

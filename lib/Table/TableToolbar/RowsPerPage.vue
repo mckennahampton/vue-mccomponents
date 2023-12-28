@@ -56,7 +56,7 @@ const updated = (length: number) => {
         :dark="props.dark"
         :placement="'bottom'"
         show-icon
-        :button-classes="[`${props.dark ? 'hover:bg-neutral-900' : 'hover:bg-neutral-100'} !px-2 whitespace-nowrap !font-normal !px-0`]"
+        :button-classes="[`${props.dark ? 'hover:bg-neutral-900 text-white' : 'hover:bg-neutral-100'} !px-2 whitespace-nowrap !font-normal !px-0`]"
         :dropdown-classes="'whitespace-nowrap w-full border-x-2 border-y-2 border-neutral-300'"
     >
         <template #button>
