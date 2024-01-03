@@ -9,7 +9,7 @@ import HeaderSelectAll from './Header/HeaderSelectAll.vue'
 import TableToolbar from './TableToolbar/TableToolbar.vue'
 import { type OrderByEntry } from './TableToolbar/Filters/OrderBy.vue'
 import { type LengthAwarePaginator } from '../Types/Laravel/LengthAwarePaginator'
-import { ref, onBeforeMount, computed, watch, useSlots, provide, reactive } from 'vue'
+import { ref, onBeforeMount, computed, watch, useSlots, provide, reactive, onMounted, type Ref } from 'vue'
 
 //#region Types
 
@@ -149,7 +149,8 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 
 
     // Table tempalte ref
-    const tableRef = ref(null)
+    const tableRef = ref(null) as Ref<HTMLElement | null>
+    const { width: tableWidth } = useElementSize(tableRef)
     onBeforeMount(() => {
         provide('tableRef', tableRef)
     })
@@ -339,17 +340,15 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     const allDisabled = computed(() => pageItems.value.filter(item => item.disabled).length == pageItems.value.length)
     const allSelected = computed(() => pageItems.value.filter(item => !item.disabled).length == selectedCount.value && pageItems.value.filter(item => !item.disabled).length > 0)
 
-    // const itemIsSelected = (item: any) => selected.value.some(item_uid => item_uid == item[tableUid + '_uid'])
     const selectedItems = computed(() => {
-
         // Remove the uid key in the exposed selectedItems array
         return itemsWithUid.value.filter(item => selectState[item[tableUid + '_uid']]).map(item => {
             const o = {...item}
             if (tableUid + '_uid' in o) delete o[tableUid + '_uid']
             return o
         })
-
     })
+
     const toggleSelectItem = (item: any) => {
         if (item.disabled) return
         selectState[item[tableUid + '_uid']] = !selectState[item[tableUid + '_uid']]
@@ -422,9 +421,35 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     }
 
     const updateInnerColumnThSize = (uid: string, width: number) => {
-        //@ts-ignore
-        columns.value.find(column => column.uid == uid).width = width
+        let temp = columns.value.find(column => column.uid == uid)
+        if (temp) {
+            temp.width = width
+        }
     }
+
+    const updateColumnsOnTableWidthChange = () => {
+        columns.value.forEach(column => {
+            let th = document.querySelector(`[data-th="${column.uid}"]`)
+            column.width = th?.getBoundingClientRect().width ?? 0
+        })
+    }
+
+    watch(tableWidth, () => {
+        if (tableWidth.value) updateColumnsOnTableWidthChange()
+    })
+
+    const initialTableMount = ref(false)
+    const scrollable = computed(() => {
+        return initialTableMount.value
+        ? props.rowHandling == 'scroll' || pageItems.value.length > 50
+        : false
+    })
+
+    onMounted(() => {
+        initialTableMount.value = true
+        if (props.rowHandling == 'scroll') columns.value.forEach(column => column.useExplicitWidth = true)
+    })
+
     onBeforeMount(() => {
         provide('updateResizing', updateResizing)
         provide('updateRowHeight', updateRowHeight)
@@ -477,7 +502,12 @@ const pageItems = computed(() => {
         items = filteredItems.value.slice(start, end)
     }
     else {
-        items = filteredItems.value
+        if (initialTableMount.value) {
+            items = filteredItems.value
+        }
+        else {
+            items = filteredItems.value.slice(0, 10)
+        }
     }
 
     // Sort the items if applicable
@@ -608,28 +638,36 @@ watch(props, () => {
             <div
                 class="w-full relative"
                 :class="[
-                    {'overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent border-y-2 border-t-neutral-200': props.rowHandling == 'scroll'},
-                    {'overflow-y-hidden': props.rowHandling != 'scroll' && pageItems.length <= 50},
-                    {'!h-auto': pageItems.length > 50}
+                    // {'overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent border-y-2 border-t-neutral-200': props.rowHandling == 'scroll'},
+                    {'overflow-y-hidden': !scrollable},
+                    {'!h-auto': scrollable}
                 ]"
 
                 :id="tableConUid"
                 ref="tableConRef"
             >
                 <table
-                    :class="[{'select-none': resizing}]"
+                    :class="[
+                        {'select-none': resizing},
+                        {'!block': scrollable}
+                    ]"
                     class="overflow-x-clip"
                     ref="tableRef"
                     v-bind="$attrs"
                     :id="tableUid"
                     data-regular-scroller
+                    :style="{
+                        ...(scrollable && {
+                            //width: tableWidth + 'px'
+                        })
+                    }"
                 >
                     <thead
                         ref="thead"
                         class="border-y-2 max-md:hidden z-[2] relative"
                         :class="[
                             {'sticky -top-[1px]': props.rowHandling == 'scroll'},
-                            {'flex flex-col': pageItems.length > 50},
+                            {'flex flex-col': scrollable},
                             {'border-y-neutral-200': !props.dark},
                             {'border-y-neutral-800': props.dark}
                         ]"
@@ -638,31 +676,33 @@ watch(props, () => {
                             <HeaderElements v-for="(column, index) in columns"
                                 :resize="props.resize"
                                 :selectable="props.selectable"
-                                :scrollable="props.rowHandling == 'scroll' || pageItems.length > 50"
                                 :column="column"
                                 :sort="props.sort"
                                 :index="index"
                                 :item-count="pageItems.length"
                                 :rows-per-page="rowsPerPage"
                                 :dark="props.dark"
-                                :is-last="(index + 2) == columns.length"
+                                :is-last="(index + (props.selectable ? 2 : 1)) == columns.length"
+                                :scrollable="scrollable"
                             />
 
                             <HeaderSelectAll v-if="props.selectable"
                                 :page-items="pageItems"
-                                :class="{'bg-white': props.rowHandling == 'scroll' || pageItems.length > 50}"
+                                :class="{'bg-white': scrollable && !props.dark}"
                                 :dark="props.dark"
+                                :column="columns[columns.length - 1]"
+                                :scroll="scrollable"
                             />
                         </tr>
                     </thead>
 
-                    <RowListHandler v-if="pageItems.length <= 50"
+                    <RowListHandler v-if="!scrollable"
                         :columns="columns"
                         :items="pageItems"
                         :row-classes="props.rowClasses"
-                        :scroll="props.rowHandling == 'scroll'"
                         :loading="props.loading"
                         :dark="props.dark"
+                        :scroll="scrollable"
                     >
                         <template v-for="column in filteredColumns" #[column.slotName]="{item}">
                             <slot
@@ -673,14 +713,15 @@ watch(props, () => {
                     </RowListHandler>
                 </table>
             </div>
-            <VirtualScroller v-if="pageItems.length > 50"
+            <VirtualScroller v-if="scrollable"
                 :items="pageItems"
                 :columns="columns"
                 :row-classes="props.rowClasses"
-                :scroll="props.rowHandling == 'scroll'"
                 :loading="props.loading"
                 :row-height="rowHeight"
                 :dark="props.dark"
+                :page-mode="props.rowHandling != 'scroll'"
+                :scroll="scrollable"
                 ref="virtualScroller"
             >
                 <template v-for="column in filteredColumns" #[column.slotName]="{item}">

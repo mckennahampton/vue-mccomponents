@@ -14,6 +14,7 @@ interface Props {
     itemCount: number,
     rowHeight?: number,
     dark: boolean,
+    scroll: boolean,
 }
 const props = defineProps<Props>()
 
@@ -28,7 +29,7 @@ const tableRowRef = ref(null) as ComputedRef<HTMLElement | null>
 onMounted(() => updateRowHeight(tableRowRef.value?.offsetHeight))
 </script>
 <template>
-        <component :is="itemCount > 50 ? 'div' : 'tr'"
+        <component :is="props.scroll ? 'div' : 'tr'"
             class="relative py-4 md:py-0 max-md:flex max-md:flex-wrap items-stretch justify-stretch w-full max-w-[500px] md:max-w-none !bg-opacity-50"
             :class="[
                 {'!bg-cyan-300': selectable && selectState[item[tableUid + '_uid']] && index % 2 == 0 && !props.dark /* Even (Selected) */},
@@ -38,8 +39,8 @@ onMounted(() => updateRowHeight(tableRowRef.value?.offsetHeight))
                 {'bg-neutral-300': index % 2 != 0 && !props.dark /* Odd */},
                 {'bg-neutral-900': index % 2 != 0 && props.dark /* Odd, Dark */},
                 {'[&>*]:disabled': item.disabled},
-                {'w-full md:!flex md:items-center': itemCount > 50},
-                {'md:!table-row print:!table-row': itemCount <= 50},
+                {'w-full md:!flex md:items-center': props.scroll},
+                {'md:!table-row print:!table-row': !props.scroll},
                 props.rowClasses
             ]"
             @dblclick="item.disabled ? null : toggleSelectItem(item)"
@@ -62,6 +63,7 @@ onMounted(() => updateRowHeight(tableRowRef.value?.offsetHeight))
                         :dark="props.dark"
                         :index="props.index"
                         :is-selected="selectable && selectState[item[tableUid + '_uid']]"
+                        :scroll="props.scroll"
                     >
                         <template #[column.slotName]="{item}" >
                             <slot

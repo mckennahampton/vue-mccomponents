@@ -15,6 +15,7 @@ interface Props {
     loading: boolean,
     rowHeight: number,
     dark: boolean,
+    pageMode: boolean,
 }
 const props = defineProps<Props>()
 
@@ -28,12 +29,13 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
     <RecycleScroller
         :items="props.items"
         :item-size="props.rowHeight"
-        item-class="item-smooth flex items-center justify-center"
+        item-class="flex items-center justify-center"
+        :class="[{'max-h-[500px]': !props.pageMode}]"
         class="virtual-scroller"
         :key-field="tableUid + '_uid'"
         v-slot="{ item, index }"
-        :buffer="1500"
-        page-mode
+        :buffer="props.pageMode ? 1500 : 200"
+        :page-mode="props.pageMode"
     >
 
         <RowElement
@@ -44,6 +46,7 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
             :item-count="props.items.length"
             :row-height="props.rowHeight"
             :dark="props.dark"
+            :scroll="props.scroll"
         >
             <template v-for="column in filteredColumns" #[column.slotName]="{item}">
                 <slot

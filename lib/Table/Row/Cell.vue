@@ -8,18 +8,19 @@ const props = defineProps<{
     dark: boolean,
     index: number,
     isSelected: boolean,
+    scroll: boolean,
 }>()
 </script>
 <template>
-    <component :is="props.itemCount > 50 ? 'div' : 'td'"
+    <component :is="props.scroll ? 'div' : 'td'"
         :header="props.column.caption"
         class="py-2 pl-2 max-md:!w-full max-md:!max-w-none max-md:!min-w-non max-md:min-h-[50px] max-md:border-t max-md:first:border-t-0 max-md:last:border-t-0"
         :class="[
             props.column?.cellOptions?.classes,
-            props.column?.cellOptions?.useMinimumSpace && props.itemCount <= 50 ? 'md:!w-[1px]' : 'md:!w-auto md:max-w-[50px]',
+            props.column?.cellOptions?.useMinimumSpace ? 'md:!w-[1px]' : 'md:!w-auto md:max-w-[50px]',
             {'overflow-hidden text-ellipsis whitespace-nowrap': props.column.cellOptions?.ellipse },
-            {'md:!table-cell': props.itemCount <= 50},
-            {'md:!block md:!max-w-none': props.itemCount > 50},
+            {'md:!table-cell': !props.scroll},
+            {'md:!block md:!max-w-none': props.scroll},
             {'before:text-neutral-800 border-t-neutral-300': !props.dark && props.index % 2 == 0 && !props.isSelected /* Light, odd, unselected */},
             {'before:text-neutral-800 border-t-cyan-500': !props.dark && props.index % 2 == 0 && props.isSelected /* Light, odd, selected */},
             {'before:text-neutral-800 border-t-neutral-400': !props.dark && props.index % 2 != 0 && !props.isSelected /*Light, even, unselected */},
@@ -30,12 +31,12 @@ const props = defineProps<{
             {'before:text-cyan-400 border-t-cyan-600': props.dark && props.index % 2 != 0 && props.isSelected /*Dark, even, selected */ }
         ]"
         :style="{
-            ...(props.itemCount > 50 && {
+            ...(props.scroll && {
                 width: props.column.width+'px',
                 maxWidth: props.column.width+'px',
                 minWidth: props.column.width+'px',
             }),
-            ...(props.itemCount <= 50 && props.column?.cellOptions?.suggestedWidth && {
+            ...((props.itemCount <= 50 || props.scroll) && props.column?.cellOptions?.suggestedWidth && {
                 maxWidth: props.column.cellOptions.suggestedWidth + 'px'
             })
         }"

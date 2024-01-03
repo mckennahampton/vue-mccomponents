@@ -43,6 +43,16 @@ const items = [
     // {"id":193,"author_id":1,"title":null,"slug":null,"excerpt":null,"body":null,"category_id":null,"published":null,"created_at":"2023-11-19T18:14:03.000000Z","updated_at":"2023-11-19T18:14:03.000000Z","deleted_at":null,"tag_ids":[],"category_name":null,"author":{"id":1,"name":"McKenna","profile_photo_url":"https://ui-avatars.com/api/?name=M&color=7F9CF5&background=EBF4FF"},"attachments":[],"tags":[],"category":null}
 ] as Post[]
 
+let extended = [] as Post[]
+extended = extended.concat(items)
+extended = extended.concat(items)
+extended = extended.concat(items)
+extended = extended.concat(items)
+extended = extended.concat(items)
+extended = extended.concat(items)
+extended = extended.concat(items)
+console.log(extended)
+
 const tableRef = ref(null)
 
 const isDark = ref(true)
@@ -75,7 +85,7 @@ onBeforeMount(() => {
             show-export
             :toolbar="true"
             ref="tableRef" 
-            :items="items"
+            :items="extended"
             :dark="isDark"
             :filters="[
                 {

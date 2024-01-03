@@ -34,7 +34,7 @@ onMounted(() => updateInnerColumnThSize(props.column.uid, width.value))
             column.classes,
             {'hover:cursor-pointer': props.sort && column.key},
             {'resizeable relative': props.resize},
-            {'bg-white': props.scrollable},
+            {'bg-white': props.scrollable && !props.dark},
             {'pr-6': props.resize}
         ]"
         ref="thRef"

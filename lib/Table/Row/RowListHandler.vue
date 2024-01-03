@@ -13,6 +13,7 @@ interface Props {
     loading: boolean,
     dark: boolean,
 }
+
 const props = defineProps<Props>()
 
 const selectable = inject('selectable') as boolean
@@ -41,6 +42,7 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
         :loading="props.loading"
         :columns="props.columns"
         :key="(props.items.length > 0 ? 1 : 0) + rowsPerPage"
+        :scroll="props.scroll"
     >
         <RowElement v-if="props.items.length > 0" v-for="(item, index) in props.items"
             :item="item"
@@ -51,6 +53,7 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
             :key="item[tableUid + '_uid']"
             ref="tableRowRef"
             :dark="props.dark"
+            :scroll="props.scroll"
         >
             <template v-for="column in filteredColumns" #[column.slotName]="{item}">
                 <slot

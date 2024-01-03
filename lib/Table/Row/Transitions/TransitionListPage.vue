@@ -13,6 +13,7 @@ const props = withDefaults(defineProps<{
     css: boolean,
     loading: boolean,
     columns: InternalColumn[]
+    scroll: boolean,
 }>(), {
     direction: 'forwards',
     durationMs: 125
@@ -157,7 +158,7 @@ const storeOriginalThMeasurements = () => {
 }
 
 function onBeforeLeavePage(el: Element) {
-    if (!props.css) return
+    if (!props.css || props.scroll) return
 
     storeOriginalThMeasurements()
 
@@ -184,7 +185,7 @@ function onBeforeLeavePage(el: Element) {
 }
 
 function onEnterPage(el: Element, done: Function) {
-    if (!props.css) return
+    if (!props.css || props.scroll) return
 
     const tableCon = document.querySelector(`#${tableConUid}`)
 
@@ -288,13 +289,13 @@ function onEnterPage(el: Element, done: Function) {
 //#region Transition Rows
 //@ts-ignore
 function onBeforeLeaveItem(el: Element) {
-    if (!props.css) return
+    if (!props.css || props.scroll) return
 
     storeOriginalThMeasurements()
 }
 
 function onLeaveItem(el: Element, done: Function) {
-    if (!props.css) return
+    if (!props.css || props.scroll) return
     lastItemAction.value = 'leave'
     cycleHasLeavingItems.value = true
 
@@ -334,13 +335,13 @@ function onLeaveItem(el: Element, done: Function) {
 //@ts-ignore
 function onBeforeEnterItem(el:Element) {
     updateIsTransitioning(true)
-    if (!props.css) return
+    if (!props.css || props.scroll) return
 
     storeOriginalThMeasurements()
 }
 
 function onEnterItem(el: Element, done: Function) {
-    if (!props.css) return
+    if (!props.css || props.scroll) return
 
         //@ts-ignore
         el.style.transition = `all ${props.durationMs}ms ease-out` // Need to set the root element transition to allow the child items time to animate

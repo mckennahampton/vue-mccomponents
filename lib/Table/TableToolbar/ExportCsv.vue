@@ -16,7 +16,7 @@ const exportToCsv = () => {
     let now = new Date
     let dateString = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}_${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`
 
-    const rows = document.querySelectorAll(`#${tableUid} tbody tr`)
+    const rows = document.querySelectorAll(`[data-row]`)
     const header = document.querySelector(`#${tableUid} thead`)
     let csvRows = []
 
@@ -31,10 +31,7 @@ const exportToCsv = () => {
     // Get table data
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i]
-        const cells = row.querySelectorAll('td:not([data-th-select])')
-
-        //@ts-ignore
-        // csvRows.push(Array.from(cells).map(cell => cell.innerText.trim() ).join(','))
+        const cells = row.querySelectorAll('[data-cell]:not([data-th-select])')
 
         csvRows.push(Array.from(cells).map(cell => {
             //@ts-ignore
