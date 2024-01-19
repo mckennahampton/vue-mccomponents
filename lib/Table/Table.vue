@@ -428,7 +428,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     }
 
     const updateColumnsOnTableWidthChange = () => {
-        columns.value.forEach(column => {
+        filteredColumns.value.forEach(column => {
             let th = document.querySelector(`[data-th="${column.uid}"]`)
             column.width = th?.getBoundingClientRect().width ?? 0
         })
@@ -440,14 +440,14 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 
     const initialTableMount = ref(false)
     const scrollable = computed(() => {
-        return initialTableMount.value
+        return initialTableMount.value && rowHeight.value > 0 && !columns.value.some(column => column.width == 0)
         ? props.rowHandling == 'scroll' || pageItems.value.length > 50
         : false
     })
 
     onMounted(() => {
-        initialTableMount.value = true
         if (props.rowHandling == 'scroll') columns.value.forEach(column => column.useExplicitWidth = true)
+        initialTableMount.value = true
     })
 
     onBeforeMount(() => {

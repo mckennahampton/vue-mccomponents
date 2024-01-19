@@ -16,6 +16,7 @@ const props = defineProps<Props>()
 
 const toggleSelectAll = inject('toggleSelectAll') as (payload: MouseEvent) => void
 const allSelected = inject('allSelected') as ComputedRef
+const allDisabled = inject('allDisabled') as ComputedRef
 
 const updateInnerColumnThSize = inject('updateInnerColumnThSize') as Function
 
@@ -30,6 +31,9 @@ onMounted(() => updateInnerColumnThSize(props.column.uid, width.value))
         @click.stop="toggleSelectAll"
         class="hover:cursor-pointer text-center !px-1 print:invisible !w-[60px]"
         data-th-select
+        :class="[
+            {'disabled': allDisabled},
+        ]"
         ref="thRef"
     >
         <span class="flex items-center justify-center">
