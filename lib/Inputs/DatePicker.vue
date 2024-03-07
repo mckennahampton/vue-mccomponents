@@ -1,48 +1,67 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import uid from '../Utilities/uid'
+import Tooltip from '../Tooltip.vue'
 import '@vuepic/vue-datepicker/dist/main.css'
 import VueDatePicker from '@vuepic/vue-datepicker'
+import FasCircleQuestion from '../Icons/FasCircleQuestion.vue'
 
 interface Props {
-    modelValue: Date,
+    modelValue: Date | null,
     enableTime?: boolean,
     maxDate?: Date,
     minDate?: Date,
     clearable?: boolean,
     classes?: string | object | any[],
     label?: string,
-    labelStyle?: string | object | any[],
+    showValidated?: boolean,
+    labelStyles?: any,
+    tooltip?: string,
+    tooltipHeader?: string,
+    placeholder?: string,
     dark?: boolean,
+    renderLabel?: boolean,
 }
 const props = withDefaults(defineProps<Props>(), {
     clearable: false,
     enableTime: false,
+    showValidated: false,
     dark: false,
+    renderLabel: true,
 })
 const emit = defineEmits(['update:modelValue'])
 
 const dateModel = ref(props.modelValue)
 const inputUid = uid()
 
-watch(dateModel, () => {
-    emit('update:modelValue', dateModel.value)
-})
-watch(props, () => {
-    dateModel.value = props.modelValue
-})
+watch(dateModel, () => emit('update:modelValue', dateModel.value))
+watch(props, () => dateModel.value = props.modelValue)
 
 </script>
 <template>
-    <label v-if="props.label"
-        class="absolute left-0 -top-5 text-sm transition-all transform -translate-x-1 delay-0"
-        :class="[
-            props.dark ? 'text-white' : 'text-black'
-        ]"
-        :for="inputUid"
-    >
-        {{ props.label }}
-    </label>
+    <div class="flex flex-col">
+        <label v-if="renderLabel"
+            class="text-[13px] hover:cursor-text text-black font-bold delay-0 transform transition-all"
+            :class="[
+                {'invisible':  !props.label},
+                props.labelStyles
+            ]"
+            :for="inputUid"
+        >
+            {{ props.label ?? 'invisible' }}
+
+            <Tooltip v-if="$slots.tooltip">
+                <template v-if="$slots.tooltipHeader" #header>
+                    <slot name="tooltipHeader" />
+                </template>
+                <template #tooltip>
+                    <slot v-if="$slots.tooltip" name="tooltip" />
+                </template>
+                <FasCircleQuestion />
+            </Tooltip>
+            
+        </label>
+    </div>
     <VueDatePicker
         v-bind="$attrs"
         v-model="dateModel"

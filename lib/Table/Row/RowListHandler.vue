@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import uid from '../../Utilities/uid'
 import RowElement from './RowElement.vue'
 import EmptyItemsRow from './EmptyItemsRow.vue'
 import { type InternalColumn } from '../Table.vue'
-import { inject, ref, onMounted, ComputedRef, computed } from 'vue'
 import TransitionListPage from './Transitions/TransitionListPage.vue'
+import { inject, ref, onMounted, ComputedRef, computed, watch } from 'vue'
 
 interface Props {
     items: any[],
@@ -12,10 +13,12 @@ interface Props {
     scroll: boolean,
     loading: boolean,
     dark: boolean,
+    externalPagination: boolean,
 }
 
 const props = defineProps<Props>()
 
+const filtered = inject('filtered') as ComputedRef<boolean>
 const selectable = inject('selectable') as boolean
 const currentPage = inject('currentPage') as ComputedRef
 const tableUid = inject('tableUid') as string
@@ -31,17 +34,32 @@ onMounted(() => {
 
 const filteredColumns = computed(() => props.columns.filter(column => column.caption != 'table_select'))
 
+const pageUid = ref(uid())
+const pageKey = computed(() => {
+    return props.externalPagination
+    ? pageUid.value
+    : currentPage.value + (props.items.length > 0 ? 1 : 0)
+})
 
+watch(() => props.items, (newParams, oldParams) => {
+    if (!newParams.every(item => oldParams.includes(item))) pageUid.value = uid()
+})
+
+const listKey = computed(() => {
+    return filtered.value
+    ? props.items.toString()
+    : (props.items.length > 0 ? 1 : 0) + rowsPerPage.value
+})
 </script>
 <template>
     <TransitionListPage
         :direction="pageStepDirection"
-        :page-key="currentPage + (props.items.length > 0 ? 1 : 0)"
+        :page-key="pageKey"
         :items-length="props.items.length"
         :css="props.items.length < 200"
         :loading="props.loading"
         :columns="props.columns"
-        :key="(props.items.length > 0 ? 1 : 0) + rowsPerPage"
+        :key="listKey"
         :scroll="props.scroll"
     >
         <RowElement v-if="props.items.length > 0" v-for="(item, index) in props.items"
@@ -50,14 +68,15 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
             :columns="props.columns"
             :selectable="selectable"
             :item-count="props.items.length"
-            :key="item[tableUid + '_uid']"
-            ref="tableRowRef"
+            :key="!filtered && item[tableUid + '_uid']"
             :dark="props.dark"
             :scroll="props.scroll"
+            :row-classes="props.rowClasses"
+            ref="tableRowRef"
         >
-            <template v-for="column in filteredColumns" #[column.slotName]="{item}">
+            <template v-for="column in filteredColumns" #[column.cellSlotName]="{item}">
                 <slot
-                    :name="column.slotName"
+                    :name="column.cellSlotName"
                     :item="item"
                 />
             </template>

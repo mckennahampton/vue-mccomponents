@@ -27,18 +27,35 @@ export interface CellOptions {
     useMinimumSpace?: boolean,
 }
 
+export interface ExportOptions {
+    isDate?: boolean,
+    dateFormat?: 'timestampToISO' | 'timestampToLocaleTime' | 'timestampToLocaleDate' | 'timestampToFullFormatted' | 'timestampToAbreviatedDate'
+    skip?: boolean,
+}
+
+export interface ExportConfig {
+    csv?: boolean,
+    pdf?: boolean,
+    print?: boolean,
+    reportTitle?: string,
+}
+
 export interface Column {
     caption: string,
+    captionProps?: any,
     key: string,
     classes?: string | any[] | object,
     cellOptions?: CellOptions,
+    exportOptions?: ExportOptions,
     sort?: boolean,
 }
 
 export interface InternalColumn extends Column {
     uid: string,
     width: number,
-    slotName: string,
+    cellSlotName: string,
+    headerSlotName: string,
+    headerHasSlotContent: boolean,
     useExplicitWidth: boolean,
 }
 
@@ -57,10 +74,11 @@ interface Filter {
 }
 
 interface Props {
+    dark?: boolean,
     toolbar?: boolean,
     rowHandling?: 'paginate' | 'scroll'
     columns: Column[],
-    items: any[],
+    items?: any[],
     sort?: boolean,
     resize?: boolean,
     selectable?: boolean,
@@ -70,18 +88,17 @@ interface Props {
     externalPagination?: false | LengthAwarePaginator,
     showDatePicker?: boolean,
     filters?: Filter[],
-    reportTitle?: string,
     showExport?: boolean,
+    exportConfig?: ExportConfig,
     orderBy?: OrderByEntry[],
     itemUid?: string,
-    dark?: boolean,
-    localLogoUrl?: string,
+    defaultRowsPerPage?: 10 | 20 | 50 | 'all',
+    toolbarClasses?: any,
 }
 //#endregion
 
 const props = withDefaults(defineProps<Props>(), {
     toolbar: true,
-    showToolbar: true,
     loading: false,
     externalPagination: false,
     showDatePicker: false,
@@ -89,6 +106,7 @@ const props = withDefaults(defineProps<Props>(), {
     sort: true,
     resize: true,
     selectable: false,
+    defaultRowsPerPage: 10,
     dark: false,
     rowHandling: 'paginate'
 })
@@ -122,8 +140,8 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     })
 
     // Table Transition properties
-    type Direction = 'forwards' | 'backwards' | 'none'
-    const pageStepDirection = ref('forwards' as Direction)
+    type Direction = 'forwards' | 'backwards' | 'none' | 'initial'
+    const pageStepDirection = ref('initial' as Direction)
     const isTransitioning = ref(false)
     const updatePageStepDirection = (dir: Direction) => {
         pageStepDirection.value = dir
@@ -148,12 +166,10 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     // *******************************************************************
 
 
-    // Table tempalte ref
+    // Table template ref
     const tableRef = ref(null) as Ref<HTMLElement | null>
     const { width: tableWidth } = useElementSize(tableRef)
-    onBeforeMount(() => {
-        provide('tableRef', tableRef)
-    })
+    onBeforeMount(() => provide('tableRef', tableRef))
     // *******************************************************************
 
 
@@ -161,23 +177,23 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     const totalItems = computed(() => {
         return props.externalPagination
         ? props.externalPagination.total
-        : props.items.length
+        : props.items?.length
     })
-    onBeforeMount(() => {
-        provide('totalItemsLength', totalItems)
-    })
+    onBeforeMount(() => provide('totalItemsLength', totalItems))
     // *******************************************************************
 
 
     // Quick Filter
     const quickFilter = ref('')
     const updateQuickFilter = (val: string) => {
-        quickFilter.value = val
-        currentPage.value = 1
+        let timer
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+            quickFilter.value = val
+            currentPage.value = 1
+        }, 100)
     }
-    const filtered = computed(() => {
-        return Boolean(quickFilter.value)
-    })
+    const filtered = computed(() => Boolean(quickFilter.value))
     onBeforeMount(() => {
         provide('filtered', filtered)
         provide('updateQuickFilter', updateQuickFilter)
@@ -186,7 +202,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 
 
     // Rows Per Page
-    const rowsPerPage = ref(10)
+    const rowsPerPage = ref(props.defaultRowsPerPage == 'all' ? 51 : props.defaultRowsPerPage)
     const updateRowsPerPage = (length: number) => {
 
         if (length > 50) columns.value.forEach(column => column.useExplicitWidth = true)
@@ -224,12 +240,8 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     const dirtyEndDate = ref(new Date)
     const startDate = ref(new Date)
     const dirtyStartDate = ref(new Date)
-    const updateEndDate = (val: string) => {
-        dirtyEndDate.value = new Date(val)
-    }
-    const updateStartDate = (val: string) => {
-        dirtyStartDate.value = new Date(val)
-    }
+    const updateEndDate = (val: string) => dirtyEndDate.value = new Date(val)
+    const updateStartDate = (val: string) => dirtyStartDate.value = new Date(val)
     onBeforeMount(() => {
         startDate.value.setMonth(endDate.value.getMonth() - 1)
         dirtyStartDate.value.setMonth(endDate.value.getMonth() - 1)
@@ -250,9 +262,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     }
     const laravelFormattedFilters = ref([] as LaravelFormattedFilter[])
     const dirtyFormattedFilters = ref([] as LaravelFormattedFilter[])
-    const updateLaravelFormattedFilters = (vals: LaravelFormattedFilter[]) => {
-        dirtyFormattedFilters.value = vals
-    }
+    const updateLaravelFormattedFilters = (vals: LaravelFormattedFilter[]) => dirtyFormattedFilters.value = vals
     onBeforeMount(() => {
         provide('laravelFormattedFilters', laravelFormattedFilters)
         provide('updateLaravelFormattedFilters', updateLaravelFormattedFilters)
@@ -266,12 +276,35 @@ const slots = useSlots() // Used to conditional rendering of the action button s
         dir: 'asc' | 'desc'
     }
     const laravelFormattedOrderBy = ref({} as LaravelFormattedOrderBy)
-    const dirtlaravelFormattedOrderBy = ref({} as LaravelFormattedOrderBy)
+    const dirtyLaravelFormattedOrderBy = ref({} as LaravelFormattedOrderBy)
     const updateLaravelFormattedOrderBy = (entry: LaravelFormattedOrderBy) => {
-        if (!entry) dirtlaravelFormattedOrderBy.value = {} as LaravelFormattedOrderBy
-        else if (entry.metric == 'none') dirtlaravelFormattedOrderBy.value = {} as LaravelFormattedOrderBy
-        else dirtlaravelFormattedOrderBy.value = entry
+        if (!entry) dirtyLaravelFormattedOrderBy.value = {} as LaravelFormattedOrderBy
+        else if (entry.metric == 'none') dirtyLaravelFormattedOrderBy.value = {} as LaravelFormattedOrderBy
+        else dirtyLaravelFormattedOrderBy.value = entry
     }
+
+    const laravelExternalPaginationArgs = computed(() => ({
+        page: currentPage.value,
+        rows: rowsPerPage.value,
+
+        // Include the start & end dates if the table has a Date Picker
+        ...(props.showDatePicker && {
+            start: startDate.value.toLocaleString(),
+            end: endDate.value.toLocaleString(),
+        }),
+
+        // Include any active filters
+        ...(laravelFormattedFilters.value && {
+            filters: laravelFormattedFilters.value
+        }),
+
+        // Include order by if active
+        ...(laravelFormattedOrderBy.value && {
+            orderBy: laravelFormattedOrderBy.value.metric,
+            orderDir: laravelFormattedOrderBy.value.dir,
+        }),
+    }))
+
     onBeforeMount(() => {
         provide('orderByEntries', props.orderBy)
         provide('laravelFormattedOrderBy', laravelFormattedOrderBy)
@@ -285,15 +318,10 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     const toggleSortDir = () => {
         sortAsc.value = !sortAsc.value
     }
-    const sortingMetric = ref(null)
-    const updateSortingMetric = (metric: string) => {
-        //@ts-ignore
-        sortingMetric.value = metric
-    }
+    const sortingMetric = ref('')
+    const updateSortingMetric = (metric: string) => sortingMetric.value = metric
     const sorting = ref(false)
-    const updateSorting = (val: boolean) => {
-        sorting.value = val
-    }
+    const updateSorting = (val: boolean) => sorting.value = val
     onBeforeMount(() => {
         provide('sortAsc', sortAsc),
         provide('sortingMetric', sortingMetric)
@@ -316,41 +344,49 @@ const slots = useSlots() // Used to conditional rendering of the action button s
         [key: string]: boolean,
     }
     const itemsWithUid = ref([] as any[])
-    const selectState = reactive({} as SelectState)
+    const selectState = reactive({} as any)
     const preparePropItems = () => {
-
-        //@ts-ignore
-        itemsWithUid.value = props.items.map((item, index) => ({
+        itemsWithUid.value = []
+        itemsWithUid.value = props.items?.map((item, index) => ({
             ...item,
             [tableUid + '_uid']: props.itemUid ? item[props.itemUid] : uid(),
-        }))
+        })) ?? []
 
-        //@ts-ignore
-        itemsWithUid.value.forEach((item, index)=> {
-            //@ts-ignore
-            selectState[item[tableUid + '_uid']] = false
-        })
+        itemsWithUid.value.forEach((item, index) => selectState[item[tableUid + '_uid']] = false)
     }
+
+    // This is critical for properly rendering item changes. If a specific item UID key is provided,
+    // then this key will only change when the list of items grows/shrinks. If no UID key is provided,
+    // this key changes every time the prop items change at all
+    // External pagination doesn't need this list key to change
+    const listKey = computed(() => {
+        if (props.externalPagination) return 1
+        else
+        {
+            let temp = itemsWithUid.value.map(item => item[tableUid + '_uid'])
+            temp.sort()
+            return temp.toString()
+        }
+    })
 
     // Reactively update the internal table items when the props change
     onBeforeMount(() => preparePropItems())
-    watch(() => props.items, () => preparePropItems())
+    watch(() => props.items, (newItems, oldItems) => preparePropItems())
 
     const selectedCount = computed(() => Object.values(selectState).filter(e => e).length)
     const allDisabled = computed(() => pageItems.value.filter(item => item.disabled).length == pageItems.value.length)
     const allSelected = computed(() => pageItems.value.filter(item => !item.disabled).length == selectedCount.value && pageItems.value.filter(item => !item.disabled).length > 0)
 
     const selectedItems = computed(() => {
-        // Remove the uid key in the exposed selectedItems array
         return itemsWithUid.value.filter(item => selectState[item[tableUid + '_uid']]).map(item => {
             const o = {...item}
             if (tableUid + '_uid' in o) delete o[tableUid + '_uid']
             return o
         })
     })
-
     const toggleSelectItem = (item: any) => {
         if (item.disabled) return
+
         selectState[item[tableUid + '_uid']] = !selectState[item[tableUid + '_uid']]
     }
     const deselectAll = () => {
@@ -366,12 +402,13 @@ const slots = useSlots() // Used to conditional rendering of the action button s
         provide('toggleSelectAll', toggleSelectAll)
         provide('allSelected', allSelected)
         provide('toggleSelectItem', toggleSelectItem)
+        // provide('itemIsSelected', itemIsSelected)
         provide('deselectAll', deselectAll)
         provide('allDisabled', allDisabled)
         provide('selectState', selectState)
     })
 
-    watch(() => props.items, () => deselectAll())
+    watch(props, () => deselectAll())
     watch(currentPage, () => deselectAll())
     watch(rowsPerPage, () => deselectAll())
     // *******************************************************************
@@ -381,50 +418,53 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     onBeforeMount(() => {
         props.columns.forEach(column => {
             columns.value.push({
-                ...column,
+                //@ts-ignore
+                caption: column.caption,
                 width: 0,
                 uid: uid(),
-                slotName: `cell(${column.key})`,
+                cellSlotName: `cell(${column.key})`,
+                headerSlotName: `header(${column.key})`,
+                headerHasSlotContent: Boolean(slots[`header(${column.key})`]),
                 useExplicitWidth: false,
                 ...(!column.hasOwnProperty('sort')) && {
                     sort: true,
                 },
+                ...column,
+
             })
         })
-        if (props.selectable) columns.value.push({
-            uid: uid(),
-            width: 0,
-            caption: 'table_select',
-            slotName: `cell(table_select)`,
-            useExplicitWidth: false,
-            key: 'table_select',
-            sort: false,
-        })
+        if (props.selectable)
+        {
+            columns.value.push({
+                uid: uid(),
+                width: 60,
+                caption: 'table_select',
+                cellSlotName: `cell(table_select)`,
+                headerSlotName: `header(table_select)`,
+                headerHasSlotContent: false,
+                useExplicitWidth: false,
+                key: 'table_select',
+                sort: false,
+            })
+        }
     })
     const filteredColumns = computed(() => columns.value.filter(column=> column.caption != 'table_select'))
 
     const virtualScroller = ref(null)
     const { height: virtualScrollerHeight } = useElementSize(virtualScroller)
     const resizing = ref(false)
-    const rowHeight = ref(0)
+    const rowHeight = ref(0) // Default to a non-zero number to allow the Virtual Scroller to properly mount
     const updateRowHeight = (val: number) => rowHeight.value = val
+
     const updateResizing = (val: boolean) => {
         // Delay to avoid selecting everything at the last second
-        if (!val) {
-            setTimeout(() => {
-                resizing.value = val
-            }, 200)
-        }
-        else {
-            resizing.value = val
-        }
+        if (!val) setTimeout(() => resizing.value = val, 200)
+        else resizing.value = val
     }
 
     const updateInnerColumnThSize = (uid: string, width: number) => {
         let temp = columns.value.find(column => column.uid == uid)
-        if (temp) {
-            temp.width = width
-        }
+        if (temp) temp.width = width
     }
 
     const updateColumnsOnTableWidthChange = () => {
@@ -451,6 +491,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     })
 
     onBeforeMount(() => {
+        provide('propsScroll', props.rowHandling == 'scroll')
         provide('updateResizing', updateResizing)
         provide('updateRowHeight', updateRowHeight)
         provide('updateInnerColumnThSize', updateInnerColumnThSize)
@@ -459,10 +500,10 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     })
     // *******************************************************************
 
-    onBeforeMount(() => {
-        provide('localLogoUrl', props.localLogoUrl)
-        provide('columns', props.columns)
-    })
+    // onBeforeMount(() => {
+    //     provide('localLogoUrl', props.localLogoUrl)
+    //     provide('columns', props.columns)
+    // })
 
 
 //#endregion
@@ -473,7 +514,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 // The key to this is the sortingMetric.value.split('.').reduce((p,c)=>p&&p[c]||'', a), where we iterate over the .-spaced string to
 // find the nested value we are looking for
 const filteredItems = computed(() => {
-    return !filtered.value
+    return !quickFilter.value
     ? itemsWithUid.value
     : itemsWithUid.value.filter((item) => {
         return Object.keys(item).some((key) => {
@@ -487,27 +528,28 @@ const filteredItems = computed(() => {
             });
         })
     })
-
 })
+
 const pageItems = computed(() => {
     let items;
 
-    // If items need to be paginated, slice only the current page's items
+    // If items need to be paginated, "fetch" only the current page's items
     // If we are using external pagination, then the provided items are already
     // chunked to the page size, so we don't need to do anything
-    if (!props.externalPagination && props.rowHandling == 'paginate')
+    if (!props.externalPagination && props.rowHandling == 'paginate' && !filtered.value)
     {
         let start = (currentPage.value - 1) * rowsPerPage.value
         let end = start + rowsPerPage.value
         items = filteredItems.value.slice(start, end)
     }
     else {
-        if (initialTableMount.value) {
-            items = filteredItems.value
-        }
-        else {
-            items = filteredItems.value.slice(0, 10)
-        }
+        console.log({
+            e: props.externalPagination,
+            r: props.rowHandling,
+            f: filtered.value
+        })
+        if (initialTableMount.value) items = filteredItems.value
+        else items = filteredItems.value.slice(0, 10)
     }
 
     // Sort the items if applicable
@@ -517,14 +559,10 @@ const pageItems = computed(() => {
             let alpha = sortAsc.value ? a : b
             let beta = !sortAsc.value ? a : b
 
-            //@ts-ignore
             return typeof deepValue(sortingMetric.value, alpha) == 'number'
-            //@ts-ignore
             ? deepValue(sortingMetric.value, alpha) - deepValue(sortingMetric.value, beta)
-            //@ts-ignore
             : deepValue(sortingMetric.value, alpha)
                 .toString()
-                //@ts-ignore
                 .localeCompare(deepValue(sortingMetric.value, beta).toString(), undefined, { numeric: true })
 
         })
@@ -540,40 +578,17 @@ const navigateTo = (page: number) => {
 
     updateCurrentPage(page)
     laravelFormattedFilters.value = dirtyFormattedFilters.value
-    laravelFormattedOrderBy.value = dirtlaravelFormattedOrderBy.value
+    laravelFormattedOrderBy.value = dirtyLaravelFormattedOrderBy.value
     startDate.value = dirtyStartDate.value
     endDate.value = dirtyEndDate.value
 
-    if (props.externalPagination) {
-        let data = {
-            page: page,
-            rows: rowsPerPage.value,
-
-            // Include the start & end dates if the table has a Date Picker
-            ...(props.showDatePicker && {
-                start: startDate.value.toLocaleString(),
-                end: endDate.value.toLocaleString(),
-            }),
-
-            // Include any active filters
-            ...(laravelFormattedFilters.value && {
-                filters: laravelFormattedFilters.value
-            }),
-
-            // Include order by if active
-            ...(laravelFormattedOrderBy.value && {
-                orderBy: laravelFormattedOrderBy.value.metric,
-                orderDir: laravelFormattedOrderBy.value.dir,
-            }),
-        }
-        emit('navigate-to', data)
-    }
+    if (props.externalPagination) emit('navigate-to', laravelExternalPaginationArgs.value)
 }
 provide('navigateTo', navigateTo)
 
 // Expose refresh method so we can manually refresh the table when necessary
 // from the parent component. Only relevant when working with external pagination
-// and the sorce data was updated
+// and the source data was updated
 const refresh = (firstPage = false) => {
     if (firstPage) currentPage.value = 1
     navigateTo(currentPage.value)
@@ -581,39 +596,36 @@ const refresh = (firstPage = false) => {
 defineExpose({
     refresh,
     selectedItems,
-    quickFilter
+    quickFilter,
+    laravelExternalPaginationArgs
 })
 
 // Behavioral cleanup
 onBeforeMount(() => {
     if (props.rowHandling == 'paginate') {
         resetSort()
-        if (props.selectable) {
-            deselectAll()
-        }
+        if (props.selectable) deselectAll()
     }
 })
 
 // Update displayed items on prop items change
 const sort = (metric: string) => {
     if(props.sort) {
-        //@ts-ignore
         sortingMetric.value = metric
         sorting.value = true
         sortAsc.value = !sortAsc.value
     }
 }
-watch(props, () => {
 
+watch(props, () => {
     // Re-sort if items are already sorted
     if (sorting.value) {
-        sortAsc.value = !sortAsc.value
-        //@ts-ignore
+        sortAsc.value = !sortAsc.value 
         sort(sortingMetric.value)
     }
     if(!props.externalPagination) currentPage.value = 1
-
 })
+
 
 </script>
 <template>
@@ -623,11 +635,13 @@ watch(props, () => {
         :external-pagination="props.externalPagination"
         :show-date-picker="props.showDatePicker"
         :show-export="props.showExport"
-        :report-title="props.reportTitle"
         :filters="props.filters"
         :loading="props.loading"
         @reset-sort="resetSort"
         :items="pageItems"
+        :columns="filteredColumns"
+        :export-config="props.exportConfig"
+        :toolbar-classes="props.toolbarClasses"
         :dark="props.dark"
     >
         <template #actionButton v-if="slots.actionButton">
@@ -638,7 +652,6 @@ watch(props, () => {
             <div
                 class="w-full relative"
                 :class="[
-                    // {'overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent border-y-2 border-t-neutral-200': props.rowHandling == 'scroll'},
                     {'overflow-y-hidden': !scrollable},
                     {'!h-auto': scrollable}
                 ]"
@@ -647,51 +660,46 @@ watch(props, () => {
                 ref="tableConRef"
             >
                 <table
-                    :class="[
-                        {'select-none': resizing},
-                        {'!block': scrollable}
-                    ]"
+                    :class="[{'select-none': resizing}]"
                     class="overflow-x-clip"
                     ref="tableRef"
                     v-bind="$attrs"
                     :id="tableUid"
                     data-regular-scroller
-                    :style="{
-                        ...(scrollable && {
-                            //width: tableWidth + 'px'
-                        })
-                    }"
                 >
                     <thead
                         ref="thead"
-                        class="border-y-2 max-md:hidden z-[2] relative"
+                        class="border-y-2 border-y-neutral-200 max-sm:hidden z-[2] relative"
                         :class="[
-                            {'sticky -top-[1px]': props.rowHandling == 'scroll'},
+                            {'sticky -top-[1px]': props.rowHandling == 'scroll' && pageItems.length > 5},
                             {'flex flex-col': scrollable},
                             {'border-y-neutral-200': !props.dark},
                             {'border-y-neutral-800': props.dark}
                         ]"
                     >
                         <tr>
-                            <HeaderElements v-for="(column, index) in columns"
+                            <HeaderElements v-for="(column, index) in filteredColumns"
                                 :resize="props.resize"
                                 :selectable="props.selectable"
+                                :scrollable="scrollable"
                                 :column="column"
                                 :sort="props.sort"
                                 :index="index"
                                 :item-count="pageItems.length"
                                 :rows-per-page="rowsPerPage"
-                                :dark="props.dark"
                                 :is-last="(index + (props.selectable ? 2 : 1)) == columns.length"
-                                :scrollable="scrollable"
-                            />
+                                :dark="props.dark"
+                            >
+                                <template #[column.headerSlotName]>
+                                    <slot :name="column.headerSlotName" />
+                                </template>
+                            </HeaderElements>
 
                             <HeaderSelectAll v-if="props.selectable"
                                 :page-items="pageItems"
                                 :class="{'bg-white': scrollable && !props.dark}"
-                                :dark="props.dark"
                                 :column="columns[columns.length - 1]"
-                                :scroll="scrollable"
+                                :dark="props.dark"
                             />
                         </tr>
                     </thead>
@@ -701,36 +709,44 @@ watch(props, () => {
                         :items="pageItems"
                         :row-classes="props.rowClasses"
                         :loading="props.loading"
-                        :dark="props.dark"
                         :scroll="scrollable"
+                        :external-pagination="Boolean(props.externalPagination)"
+                        :key="listKey"
+                        :dark="props.dark"
                     >
-                        <template v-for="column in filteredColumns" #[column.slotName]="{item}">
+                        <template v-for="column in filteredColumns" #[column.cellSlotName]="{item}">
                             <slot
-                                :name="column.slotName"
+                                :name="column.cellSlotName"
                                 :item="item"
                             />
                         </template>
                     </RowListHandler>
                 </table>
             </div>
-            <VirtualScroller v-if="scrollable"
-                :items="pageItems"
-                :columns="columns"
-                :row-classes="props.rowClasses"
-                :loading="props.loading"
-                :row-height="rowHeight"
-                :dark="props.dark"
-                :page-mode="props.rowHandling != 'scroll'"
-                :scroll="scrollable"
-                ref="virtualScroller"
-            >
-                <template v-for="column in filteredColumns" #[column.slotName]="{item}">
-                    <slot
-                        :name="column.slotName"
-                        :item="item"
-                    />
-                </template>
-            </VirtualScroller>
+            <template v-if="scrollable">
+                <VirtualScroller v-if="pageItems.length > 0"
+                    :items="pageItems"
+                    :columns="columns"
+                    :row-classes="props.rowClasses"
+                    :loading="props.loading"
+                    :row-height="rowHeight"
+                    :page-mode="props.rowHandling != 'scroll'"
+                    :scroll="scrollable"
+                    :item-uid="props.itemUid"
+                    :scrollable-max-height="props.scrollableMaxHeight"
+                    :dark="props.dark"
+                    ref="virtualScroller"
+                    :key="JSON.stringify(pageItems)"
+                >
+                    <template v-for="column in filteredColumns" #[column.cellSlotName]="{item}">
+                        <slot
+                            :name="column.cellSlotName"
+                            :item="item"
+                        />
+                    </template>
+                </VirtualScroller>
+                <span v-else class="italic opacity-50 w-full text-center min-h-[60px] flex items-center justify-center bg-neutral-200">No items</span>
+            </template>
         </template>
 
         <template v-if="slots.footer" #footer="{items}">

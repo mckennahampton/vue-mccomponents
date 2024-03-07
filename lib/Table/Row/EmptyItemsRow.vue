@@ -7,7 +7,7 @@ const props = defineProps<Props>()
 <template>
     <tr>
         <td :colspan="props.colspan">
-            <span class="italic opacity-50 block w-full text-center">No items</span>
+            <span class="italic opacity-50 w-full text-center min-h-[60px] flex items-center justify-center">No items</span>
         </td>
     </tr>
 </template>

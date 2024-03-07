@@ -6,20 +6,21 @@ import PrintTable from './PrintTable.vue'
 import Input from '../../Inputs/Input.vue'
 import RowsPerPage from './RowsPerPage.vue'
 import QueryDetails from './QueryDetails.vue'
+import FasBars from '../../Icons/FasBars.vue'
 import TableDates from './Filters/TableDates.vue'
 import FasFilter from '../../Icons/FasFilter.vue'
 import PaginateButtons from '../PaginateButtons.vue'
 import Accordion from '../../Accordion/Accordion.vue'
 import MutedButton from '../../Buttons/MutedButton.vue'
 import FasCaretDown from '../../Icons/FasCaretDown.vue'
+import DropdownButton from '../../Buttons/DropdownButton.vue'
 import AccordionItem from '../../Accordion/AccordionItem.vue'
+import { type ExportConfig, InternalColumn } from '../Table.vue'
 import TransitionFade from '../../Transitions/TransitionFade.vue'
 import OrderBy, { type OrderByEntry } from './Filters/OrderBy.vue'
 import TableFilters, { type Filter} from './Filters/TableFilters.vue'
 import { ref, useSlots, inject, onMounted, type ComputedRef, watch } from 'vue'
 import { type LengthAwarePaginator } from '../../Types/Laravel/LengthAwarePaginator'
-import DropdownButton from '../../Buttons/DropdownButton.vue'
-import FasBars from '../../Icons/FasBars.vue'
 
 interface Props {
     toolbar: boolean,
@@ -27,16 +28,19 @@ interface Props {
     filters?: Filter[],
     externalPagination: false | LengthAwarePaginator,
     showExport: boolean,
-    reportTitle?: string,
+    exportConfig?: ExportConfig,
     loading: boolean,
     paginate: boolean,
     items: any[],
+    columns: InternalColumn[],
+    toolbarClasses?: any,
     dark: boolean,
 }
 const props = defineProps<Props>()
 
 const emit = defineEmits([
     'resetSort',
+    'deselectAll',
     'navigateTo',
     'update:filtered',
     'update:rowsPerPage',
@@ -69,9 +73,6 @@ const filter = () => {
     }
     deselectAll()
 }
-watch(textFilter, () => {
-    filter()
-})
 
 const resetFilter = () => {
     textFilter.value = ''
@@ -97,9 +98,15 @@ onMounted(() => {
     }
 })
 
+const hasExportButton = (type: 'csv' | 'pdf' | 'print' | 'reportTitle') => {
+    return props.hasOwnProperty('exportConfig') && typeof props.exportConfig !== 'undefined'
+    ? props.exportConfig.hasOwnProperty(type) && props.exportConfig[type]
+    : true
+}
+
 </script>
 <template>
-    <div class="flex flex-col items-start justify-center w-full mb-20 relative">
+    <div class="flex flex-col items-start justify-center w-full mb-20 relative" :class="props.toolbarClasses">
         <template v-if="props.toolbar">
             <div 
                 :class="[{'disabled': props.loading}]"
@@ -151,8 +158,14 @@ onMounted(() => {
                                 <!-- Export buttons -->
                                 <template v-if="props.showExport">
                                     <VR class="max-lg:hidden" />
-                                    <ExportCsv class="max-lg:hidden" :dark="dark" :report-title="props.reportTitle" />
-                                    <ExportPdf class="max-lg:hidden" :dark="dark" :report-title="props.reportTitle" />
+                                    <ExportCsv
+                                        class="max-lg:hidden"
+                                        :dark="dark"
+                                        :items="props.items"
+                                        :report-title="props?.exportConfig?.reportTitle"
+                                        :columns="props.columns"
+                                    />
+                                    <ExportPdf class="max-lg:hidden" :dark="dark" :report-title="props?.exportConfig?.reportTitle" />
                                     <PrintTable class="max-lg:hidden" :dark="dark" />
                                 </template>
 
@@ -179,9 +192,15 @@ onMounted(() => {
                                                 <!-- Export buttons -->
                                                 <template v-if="props.showExport">
                                                     <VR />
-                                                    <ExportCsv :dark="dark" :report-title="props.reportTitle" />
-                                                    <ExportPdf :dark="dark" :report-title="props.reportTitle" />
-                                                    <PrintTable :dark="dark" />
+                                                    <ExportCsv
+                                                        class="max-lg:hidden"
+                                                        :dark="dark"
+                                                        :items="props.items"
+                                                        :report-title="props?.exportConfig?.reportTitle"
+                                                        :columns="props.columns"
+                                                    />
+                                                    <ExportPdf class="max-lg:hidden" :dark="dark" :report-title="props?.exportConfig?.reportTitle" />
+                                                    <PrintTable class="max-lg:hidden" :dark="dark" />
                                                 </template>
                                             </template>
                                         </DropdownButton>

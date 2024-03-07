@@ -1,5 +1,6 @@
 export const timestampToISO = (stamp: string | Date) => {
     let temp = stamp instanceof Date ? stamp : new Date(stamp)
+    // return `${temp.getFullYear()}-${temp.getMonth()}-${temp.getDate()}`
     return temp.toISOString().split('T')[0]
 }
 
@@ -16,6 +17,11 @@ export const timestampToLocaleDate = (stamp: string | Date) => {
 export const timestampToFullFormatted = (stamp: string | Date) => {
     let temp = stamp instanceof Date ? stamp : new Date(stamp)
     return temp.toLocaleDateString() + ' ' + temp.toLocaleTimeString()
+}
+
+export const timestampToAbbreviatedDate = (stamp: string | Date) => {
+    let temp = stamp instanceof Date ? stamp : new Date(stamp)
+    return temp.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'})
 }
 
 export function timeDiff(input: string | Date, summarize = true) {

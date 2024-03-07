@@ -32,9 +32,7 @@ const rowsPerPageOptions = ref([
     ] : [])
 ] as RowsPerPageOption[])
 
-const currentRowsPerPage = computed(() => {
-    return rowsPerPageOptions.value.find(option => option.current == true)
-})
+const currentRowsPerPage = computed(() => rowsPerPageOptions.value.find(option => option.current == true))
 
 const updated = (length: number) => {
     length == 0

@@ -40,10 +40,10 @@ const props = defineProps<{
                 maxWidth: props.column.cellOptions.suggestedWidth + 'px'
             })
         }"
-        :data-cell="props.column.slotName"
+        :data-cell="props.column.cellSlotName"
     >
         <slot
-            :name="props.column.slotName"
+            :name="props.column.cellSlotName"
             :item="props.item"
         />
     </component>

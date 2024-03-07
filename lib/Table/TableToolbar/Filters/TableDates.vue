@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { inject, type ComputedRef } from 'vue'
 import DatePicker from '../../../Inputs/DatePicker.vue'
-import InputGroup from '../../../Inputs/InputGroup.vue'
 
 interface Props {
     maxDate?: string,
@@ -26,22 +25,18 @@ defineExpose({
 
 </script>
 <template>
-    <InputGroup>
-        <DatePicker
-            v-model="dirtyStartDate"
-            :max-date="dirtyEndDate"
-            label="Start Date"
-            :dark="props.dark"
-        />
-    </InputGroup>
+    <DatePicker
+        v-model="dirtyStartDate"
+        :max-date="dirtyEndDate"
+        label="Start Date"
+        :dark="props.dark"
+    />
 
-    <InputGroup>
-        <DatePicker
-            v-model="dirtyEndDate"
-            :max-date="props.maxDate ? new Date(props.maxDate) : new Date()"
-            :min-date="dirtyStartDate"
-            label="End Date"
-            :dark="props.dark"
-        />
-    </InputGroup>
+    <DatePicker
+        v-model="dirtyEndDate"
+        :max-date="props.maxDate ? new Date(props.maxDate) : new Date()"
+        :min-date="dirtyStartDate"
+        label="End Date"
+        :dark="props.dark"
+    />
 </template>

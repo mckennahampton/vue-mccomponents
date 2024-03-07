@@ -6,7 +6,7 @@ import TableRowSkeleton from '../../../Skeletons/Table/TableRowSkeleton.vue'
 import { type LengthAwarePaginator } from '../../../Types/Laravel/LengthAwarePaginator'
 
 const props = withDefaults(defineProps<{
-    direction?: 'forwards' | 'backwards' | 'none',
+    direction?: 'forwards' | 'backwards' | 'none' | 'initial',
     durationMs?: number,
     pageKey: string | number,
     itemsLength: number,
@@ -23,10 +23,9 @@ const tableConUid = inject('tableConUid') as string
 const tableUid = inject('tableUid') as string
 const updatePageStepDirection = inject('updatePageStepDirection') as Function
 const externalPagination = inject('externalPagination') as false | LengthAwarePaginator
-const rowsPerPage = inject('rowsPerPage') as ComputedRef<number>
-const selectable = inject('selectable') as boolean
 const tableRef = inject('tableRef') as ComputedRef<HTMLInputElement | null>
 const updateIsTransitioning = inject('updateIsTransitioning') as Function
+const propsScroll = inject('propsScroll') as boolean
 
 const originalOverflow = ref('')
 const originalWidth = ref('')
@@ -38,8 +37,9 @@ const cycleHasLeavingItems = ref(false)
 
 const { height: tableHeight } = useElementSize(tableRef)
 
-const resizeTimeout = ref(null)
+const resizeTimeout = ref({} as NodeJS.Timeout)
 const resizeTableCon = () => {
+    if (!props.css || propsScroll || props.direction == 'initial') return
 
     let tableCon = document.querySelector(`#${tableConUid}`)
 
@@ -73,7 +73,6 @@ const resizeTableCon = () => {
 watch(tableHeight, () => {
     if (resizeTimeout.value) clearTimeout(resizeTimeout.value)
     
-    //@ts-ignore
     resizeTimeout.value = setTimeout(() => {
         resizeTableCon()
         lastItemAction.value = 'resized'
@@ -82,7 +81,7 @@ watch(tableHeight, () => {
 })
 
 const originalThCaptured = ref(false)
-const resizeThTimeout = ref(null)
+const resizeThTimeout = ref({} as NodeJS.Timeout)
 const resizeTh = () => {
 
     let tableCon = document.querySelector(`#${tableConUid}`)
@@ -126,7 +125,7 @@ const resizeTh = () => {
 
     // After the animation is over, set the TH widths back to auto
     setTimeout(() => {
-        tableCon?.querySelectorAll('thead tr th:not([data-th-select])').forEach(th => {
+        tableCon?.querySelectorAll('thead tr th:not([data-th-select])').forEach((th, index) => {
             //@ts-ignore
             th.style.width = 'auto'
 
@@ -158,7 +157,7 @@ const storeOriginalThMeasurements = () => {
 }
 
 function onBeforeLeavePage(el: Element) {
-    if (!props.css || props.scroll) return
+    if (!props.css || propsScroll || props.direction == 'initial') return
 
     storeOriginalThMeasurements()
 
@@ -168,14 +167,14 @@ function onBeforeLeavePage(el: Element) {
     //@ts-ignore
     el.style.transition = `all ${props.durationMs}ms ease-out` // Need to set the root element transition to allow the child items time to animate
     //@ts-ignore
-    if (externalPagination) el.style.opacity = 0
+    // if (externalPagination) el.style.opacity = 0
     el.querySelectorAll(':scope > *').forEach(_el => {
         //@ts-ignore
         _el.style.transition = `all ${props.durationMs}ms ease-out` 
         //@ts-ignore
-        if (props.direction == 'forwards' && !externalPagination) _el.style.animation = `leaveForwards ${props.durationMs}ms`
+        if (props.direction == 'forwards' && /*!externalPagination*/ true) _el.style.animation = `leaveForwards ${props.durationMs}ms`
         //@ts-ignore
-        else if (props.direction == 'backwards' && !externalPagination) _el.style.animation = `leaveBackwards ${props.durationMs}ms`
+        else if (props.direction == 'backwards' && /*!externalPagination*/ true) _el.style.animation = `leaveBackwards ${props.durationMs}ms`
         //@ts-ignore
         else _el.style.animation = `leave ${props.durationMs}ms`
         //@ts-ignore
@@ -185,7 +184,7 @@ function onBeforeLeavePage(el: Element) {
 }
 
 function onEnterPage(el: Element, done: Function) {
-    if (!props.css || props.scroll) return
+    if (!props.css || propsScroll || props.direction == 'initial') return
 
     const tableCon = document.querySelector(`#${tableConUid}`)
 
@@ -193,7 +192,9 @@ function onEnterPage(el: Element, done: Function) {
     // gets absolutely positioned
 
     const tempTable = document.createElement('table')
+    const tempThead = document.querySelector(`#${tableUid} thead`)?.cloneNode(true) // Add the thead for proper sizing of the columns
     const clone = el.cloneNode(true)
+    if (tempThead) tempTable.appendChild(tempThead)
     tempTable.appendChild(clone)
 
     document.body.appendChild(tempTable)
@@ -202,7 +203,7 @@ function onEnterPage(el: Element, done: Function) {
     //@ts-ignore
     tempTable.style.position = 'absolute'
     //@ts-ignore
-    tempTable.style.width = '100%'
+    tempTable.style.width = document.querySelector(`#${tableUid}`).offsetWidth
 
     //@ts-ignore
     clone.style.width = originalWidth.value
@@ -213,7 +214,6 @@ function onEnterPage(el: Element, done: Function) {
 
     //@ts-ignore
     const newTableHeight = getComputedStyle(clone).height
-
     document.body.removeChild(tempTable)
 
     //@ts-ignore
@@ -234,20 +234,16 @@ function onEnterPage(el: Element, done: Function) {
     if (props.direction != 'none') el.style.transition = `all ${props.durationMs}ms ease-out`
     //@ts-ignore
     tableCon.style.transition = `all ${props.durationMs}ms ease-out`
-    //@ts-ignore
-    // tableCon.style.height = originalTableConHeight.value
-    // requestAnimationFrame(() => {
-    //     //@ts-ignore
-    //     tableCon.style.height = newConHeight+'px'
-    // })
 
-    if (!props.loading) resizeTh()
+    if (!props.loading) {
+        resizeTh()
+    }
 
     el.querySelectorAll(':scope > *').forEach(_el => {
         //@ts-ignore
-        if (props.direction == 'forwards' && !externalPagination) _el.style.animation = `enterForwards ${props.durationMs}ms`
+        if (props.direction == 'forwards' && /*!externalPagination*/ true) _el.style.animation = `enterForwards ${props.durationMs}ms`
         //@ts-ignore
-        else if (props.direction == 'backwards' && !externalPagination) _el.style.animation = `enterBackwards ${props.durationMs}ms`
+        else if (props.direction == 'backwards' && /*!externalPagination*/ true) _el.style.animation = `enterBackwards ${props.durationMs}ms`
         //@ts-ignore
         else _el.style.animation = `enter ${props.durationMs}ms`
     })
@@ -264,8 +260,6 @@ function onEnterPage(el: Element, done: Function) {
             el.parentElement.style.overflow = originalOverflow.value
             //@ts-ignore
             el.style.display = originalDisplay.value
-            //@ts-ignore
-            // tableCon.style.height = 'auto'
             //@ts-ignore
             el.style.height = 'auto'
         }
@@ -287,15 +281,13 @@ function onEnterPage(el: Element, done: Function) {
 
 
 //#region Transition Rows
-//@ts-ignore
 function onBeforeLeaveItem(el: Element) {
-    if (!props.css || props.scroll) return
-
+    if (!props.css || propsScroll || props.direction == 'initial') return
     storeOriginalThMeasurements()
 }
 
 function onLeaveItem(el: Element, done: Function) {
-    if (!props.css || props.scroll) return
+    if (!props.css || propsScroll || props.direction == 'initial') return
     lastItemAction.value = 'leave'
     cycleHasLeavingItems.value = true
 
@@ -303,25 +295,10 @@ function onLeaveItem(el: Element, done: Function) {
     //@ts-ignore
     el.style.transition = `all ${props.durationMs}ms ease-out` // Need to set the root element transition to allow the child items time to animate
     //@ts-ignore
-    // if (externalPagination) el.style.opacity = 0
-    // //@ts-ignore
-    // if (props.direction == 'forwards' && !externalPagination) el.style.animation = `leaveForwards ${props.durationMs}ms`
-    // //@ts-ignore
-    // else if (props.direction == 'backwards' && !externalPagination) el.style.animation = `leaveBackwards ${props.durationMs}ms`
-    // //@ts-ignore
-    // else el.style.animation = `itemLeave ${props.durationMs}ms`
-    // //@ts-ignore
-    // if (props.direction == 'forwards' || props.direction == 'backwards' || externalPagination) el.style.opacity = 0 // Keeps the outgoing list from blipping back on the page for a moment
-
-    //@ts-ignore
     el.style.animation = `itemLeave ${props.durationMs}ms`
-    //@ts-ignore
-    // el.style.opacity = 0
-
 
     // Debounce resizeTh
     if (resizeThTimeout.value) clearTimeout(resizeThTimeout.value)
-    //@ts-ignore
     resizeThTimeout.value = setTimeout(() => {
         resizeTh()
     }, props.durationMs * 1.1)
@@ -332,59 +309,39 @@ function onLeaveItem(el: Element, done: Function) {
     }, props.durationMs)
 }
 
-//@ts-ignore
 function onBeforeEnterItem(el:Element) {
-    updateIsTransitioning(true)
-    if (!props.css || props.scroll) return
+updateIsTransitioning(true)
+if (!props.css || propsScroll || props.direction == 'initial') return
 
-    storeOriginalThMeasurements()
+storeOriginalThMeasurements()
 }
 
 function onEnterItem(el: Element, done: Function) {
-    if (!props.css || props.scroll) return
+if (!props.css || propsScroll || props.direction == 'initial') return
 
+    //@ts-ignore
+    el.style.transition = `all ${props.durationMs}ms ease-out` // Need to set the root element transition to allow the child items time to animate
+
+    //@ts-ignore
+    el.style.animation = `itemEnter ${props.durationMs}ms`
+    if (cycleHasLeavingItems.value) {
         //@ts-ignore
-        el.style.transition = `all ${props.durationMs}ms ease-out` // Need to set the root element transition to allow the child items time to animate
+        el.style.transitionDelay = props.durationMs + 'ms'
+    }
 
-        // //@ts-ignore
-        // if (props.direction == 'forwards' && !externalPagination) el.style.animation = `enterForwards ${props.durationMs}ms`
-        // //@ts-ignore
-        // else if (props.direction == 'backwards' && !externalPagination) el.style.animation = `enterBackwards ${props.durationMs}ms`
-        // //@ts-ignore
-        // else el.style.animation = `itemEnter ${props.durationMs}ms`
-        // //@ts-ignore
-        // if (props.direction == 'forwards' || props.direction == 'backwards' || externalPagination)
-        // {
-        //     //@ts-ignore
-        //     el.style.opacity = 0 // Keeps the outgoing list from blipping back on the page for a moment
-        //     setTimeout(() => {
-        //         //@ts-ignore
-        //         el.style.opacity = 1
-        //     }, props.durationMs * 1.1)   
-            
-        // }
+    // Debounce resizeTh
+    if (resizeThTimeout.value) clearTimeout(resizeThTimeout.value)
+    resizeThTimeout.value = setTimeout(() => {
+        resizeTh()
+    }, props.durationMs * 1.1)
 
-        //@ts-ignore
-        el.style.animation = `itemEnter ${props.durationMs}ms`
-        if (cycleHasLeavingItems.value) {
-            //@ts-ignore
-            el.style.transitionDelay = props.durationMs + 'ms'
-        }
+    lastItemAction.value = 'enter'
 
-        // Debounce resizeTh
-        if (resizeThTimeout.value) clearTimeout(resizeThTimeout.value)
-        //@ts-ignore
-        resizeThTimeout.value = setTimeout(() => {
-            resizeTh()
-        }, props.durationMs * 1.1)
-
-        lastItemAction.value = 'enter'
-
-        setTimeout(() => {
-            el.removeAttribute('style') // Removes any lingering inline styles that might interfrere with sorting
-            updateIsTransitioning(false)
-            done()
-        }, props.durationMs * 1.1)
+    setTimeout(() => {
+        el.removeAttribute('style') // Removes any lingering inline styles that might interfrere with sorting
+        updateIsTransitioning(false)
+        done()
+    }, props.durationMs * 1.1)
 
 }
 //#endregion
@@ -396,7 +353,7 @@ function onEnterItem(el: Element, done: Function) {
         @before-leave="onBeforeLeavePage"
         @enter="onEnterPage"
     >
-        <TransitionGroup v-if="!props.loading"
+        <TransitionGroup
             :name="props.css ? 'list' : 'no_transitions'"
             tag="tbody"
             @before-leave="onBeforeLeaveItem"
@@ -409,12 +366,6 @@ function onEnterItem(el: Element, done: Function) {
         >
             <slot />
         </TransitionGroup>
-        <tbody v-else>
-        <!-- @vue-ignore -->
-            <TableRowSkeleton v-for="index in rowsPerPage"
-                :cols="props.columns.length + (selectable ? 1 : 0)"
-            />
-        </tbody>
     </Transition>
 </template>
 <style>

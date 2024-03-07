@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { useEventListener } from '@vueuse/core'
 import { useElementBounding } from '@vueuse/core'
-import { ref, computed, reactive, watch, type ComponentPublicInstance } from 'vue'
 import TransitionFade from './Transitions/TransitionFade.vue'
 import { resolveXClip, resolveYClip } from './Utilities/clipping'
+import { ref, computed, reactive, watch, type ComponentPublicInstance, useSlots, onMounted, onBeforeUnmount } from 'vue'
 
 type Position = 'top' | 'top-right' | 'top-left' | 'bottom' | 'bottom-right' | 'bottom-left' | 'right' | 'left' | 'center';
 interface Props {
     position?: Position,
-    header?: string,
-    body: string,
     tooltipClasses?: string,
     disable?: boolean,
     offset?: number,
@@ -18,32 +16,23 @@ interface Props {
     manualRef?: boolean,
     elementTag?: string,
     dark?: boolean,
+    clickToClose?: boolean
 }
 const props = withDefaults(defineProps<Props>(), {
     manualRef: false,
     elementTag: 'span',
     dark: false,
+    clickToClose: false
 })
 
+const slots = useSlots()
 const slotRef = ref<Element | ComponentPublicInstance | null>(null)
-const setSlotRef = (el: Element | ComponentPublicInstance | null) => {
-  slotRef.value = el
-}
+const setSlotRef = (el: Element | ComponentPublicInstance | null) => slotRef.value = el
 
-const position = computed(() => {
-    return props.position ?? 'top'
-})
-const body = computed(() => {
-    return props.body
-})
-const header = computed(() => {
-    return props.header
-})
+const position = computed(() => props.position ?? 'top')
 
 const isOpen = ref(false)
-const disabled = computed(() => {
-    return props.disable ?? false
-})
+const disabled = computed(() => props.disable ?? false)
 
 const arrowClasses = computed(() => {
     if (position.value.includes('top')) {
@@ -70,14 +59,10 @@ const tooltipArrowEl = ref(null)
 const parentRect = reactive({
     rect: {} as any
 })
-const isSlotReady = computed(() => {
-    return Boolean(slotRef.value)
-})
+const isSlotReady = computed(() => Boolean(slotRef.value))
 watch(slotRef, () => {
-    if (isSlotReady.value) {
-        //@ts-ignore
-        parentRect.rect = useElementBounding(slotRef)
-    }
+    //@ts-ignore
+    if (isSlotReady.value) parentRect.rect = useElementBounding(slotRef)
 })
 
 const state = reactive({
@@ -117,9 +102,8 @@ const tooltipLeft = computed(() => {
         }
         return Math.round(resolveXClip(temp, tooltipWidth.value))
     }
-    else {
-        return 0
-    }
+
+    else return 0
 })
 
 const tooltipTop = computed(() => {
@@ -148,10 +132,8 @@ const tooltipTop = computed(() => {
         }
         return Math.round(resolveYClip(temp, tooltipHeight.value))
     }
-    else {
-        return 0
-    }
 
+    else return 0
 })
 
 const tooltipArrowLeft = computed(() => {
@@ -202,33 +184,31 @@ const open = () => {
     isOpen.value = true
 }
 
-const close = () => {
-    isOpen.value = false
-}
+const close = () => isOpen.value = false
 
 const closeOnScroll = () => {
     if (position.value != 'center') close()
 }
 //@ts-ignore
-useEventListener(slotRef, 'mouseenter', () => {
-    open()
-})
+useEventListener(slotRef, 'mouseenter', () => open())
 //@ts-ignore
 useEventListener(slotRef, 'mouseleave', () => {
-    close()
+    if (!props.clickToClose) close()
 })
 //@ts-ignore
-useEventListener(slotRef, 'mousedown', () => {
-    if (position.value != 'center') close()
-})
+useEventListener(slotRef, 'mousedown', (e) => closeOnScroll())
+
+const closeOnOutsideClick = (event: MouseEvent) => {
+    //@ts-ignore
+    if (!event.target.closest('#tooltips') && position.value != 'center') close()
+}
+
+onMounted(() => document.addEventListener('click', closeOnOutsideClick))
+onBeforeUnmount(() => document.removeEventListener('click', closeOnOutsideClick))
 
 watch(isOpen, () => {
-    if (isOpen.value) {
-        document.addEventListener('scroll', closeOnScroll, true)
-    }
-    else {
-        document.removeEventListener('scroll', closeOnScroll, true)
-    }
+    if (isOpen.value) document.addEventListener('scroll', closeOnScroll, true)
+    else document.removeEventListener('scroll', closeOnScroll, true)
 })
 
 
@@ -250,16 +230,30 @@ watch(isOpen, () => {
                 class="fixed z-[999999] max-w-[500px] flex flex-col normal-case text-[15px] leading-5 select-none pointer-events-none text-center text-ellipsis py-3 px-4 shadow border"
                 :class="[
                     props.tooltipClasses,
-                    props.dark ? 'text-white bg-black border-neutral-900' : 'text-black bg-white border-neutral-200'
+                    {'text-white bg-black border-neutral-900': props.dark },
+                    {'text-black bg-white border-neutral-200': !props.dark },
+                    {'': !$slots.header},
+                    {'max-w-[350px]': $slots.header}
                 ]"
                 :style="{top: tooltipTop + 'px', left: tooltipLeft + 'px'}"
                 ref="tooltipEl"
                 v-if="isOpen && !disabled"
             >
             
-                <span v-if="props.header" class="text-lg font-bold mb-2">{{ header }}</span>
+                <span v-if="slots.header" class="text-lg text-left font-bold mb-2">
+                    <slot name="header" />
+                </span>
 
-                <span :class="[props.header ? 'text-left' : 'whitespace-nowrap min-w-min', props.bodyClasses]">{{ body }}</span>
+                <div
+                    :class="[
+                        {'whitespace-nowrap': !$slots.header},
+                        {'whitespace-normal text-left text-pretty': $slots.header},
+                        props.bodyClasses
+                    ]"
+                >
+                    <slot name="tooltip" />
+                </div>
+
                 <div v-if="props.showArrow && position != 'center'" :class="arrowClasses" class="fixed" ref="tooltipArrowEl" :style="{top: tooltipArrowTop + 'px', left: tooltipArrowLeft + 'px'}"></div>
             </span>
         </TransitionFade>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import Select from '../../../Inputs/Select.vue'
-import InputGroup from '../../../Inputs/InputGroup.vue'
 import { ref, inject, computed, onBeforeMount } from 'vue'
 
 const props = defineProps<{
@@ -121,30 +120,28 @@ defineExpose({
 
 </script>
 <template>
-    <InputGroup>
-        <div class="flex flex-col md:flex-row max-md:mt-4 max-md:mb-5 items-center justify-between md:gap-5">
-            <Select
-                button-classes="pb-1 pt-5 min-w-[175px]"
-                :items="entries"
-                :model-value="entries.find(e => e.active)?.value"
-                @update:model-value="val => entrySelected(val)"
-                searchable
-                ref="orderByRef"
-                label="Order By"
-                :dark="props.dark"
-            />
-            <Select
-                button-classes="pb-1 pt-5 min-w-[175px]"
-                empty-placeholder="Direction"
-                :items="dirEntries"
-                @update:model-value="val => dirSelected(val)"
-                :class="[{'disabled': entries.some(entry => entry.active && entry.value == 'none')}]"
-                ref="dirRef"
-                v-model="defaultDir"
-                :dark="props.dark"
-            />
-        </div>
-    </InputGroup>
+    <div class="flex flex-col md:flex-row max-md:mt-4 max-md:mb-5 items-center justify-between md:gap-5">
+        <Select
+            button-classes="pb-1 pt-5 min-w-[175px]"
+            :items="entries"
+            :model-value="entries.find(e => e.active)?.value"
+            @update:model-value="val => entrySelected(val)"
+            searchable
+            ref="orderByRef"
+            label="Order By"
+            :dark="props.dark"
+        />
+        <Select
+            button-classes="pb-1 pt-5 min-w-[175px]"
+            empty-placeholder="Direction"
+            :items="dirEntries"
+            @update:model-value="val => dirSelected(val)"
+            :class="[{'disabled': entries.some(entry => entry.active && entry.value == 'none')}]"
+            ref="dirRef"
+            v-model="defaultDir"
+            :dark="props.dark"
+        />
+    </div>
 </template>
 <style scoped>
 .disabled {

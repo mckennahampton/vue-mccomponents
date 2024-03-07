@@ -11,11 +11,13 @@ interface Props {
     items: any[],
     columns: InternalColumn[],
     rowClasses?: string | object | any[],
-    scroll: boolean,
     loading: boolean,
     rowHeight: number,
-    dark: boolean,
     pageMode: boolean,
+    scroll: boolean,
+    itemUid?: string,
+    scrollableMaxHeight?: number,
+    dark: boolean,
 }
 const props = defineProps<Props>()
 
@@ -30,9 +32,13 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
         :items="props.items"
         :item-size="props.rowHeight"
         item-class="flex items-center justify-center"
-        :class="[{'max-h-[500px]': !props.pageMode}]"
         class="virtual-scroller"
-        :key-field="tableUid + '_uid'"
+        :style="{
+            ...(!props.pageMode && {
+                maxHeight: `${props.scrollableMaxHeight ?? 500}px`
+            })
+        }"
+        :key-field="props.itemUid ?? tableUid + '_uid'"
         v-slot="{ item, index }"
         :buffer="props.pageMode ? 1500 : 200"
         :page-mode="props.pageMode"
@@ -47,10 +53,11 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
             :row-height="props.rowHeight"
             :dark="props.dark"
             :scroll="props.scroll"
+            :key="item[props.itemUid ?? tableUid + '_uid']"
         >
-            <template v-for="column in filteredColumns" #[column.slotName]="{item}">
+            <template v-for="column in filteredColumns" #[column.cellSlotName]="{item}">
                 <slot
-                    :name="column.slotName"
+                    :name="column.cellSlotName"
                     :item="item"
                 />
             </template>
@@ -67,6 +74,15 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
 .virtual-scroller :deep(.item-smooth) {
     -webkit-font-smoothing: subpixel-antialiased;
     -webkit-transform: translateZ(0) scale(1.0, 1.0);
+    -webkit-backface-visibility: hidden;
+    filter: blur(0);
+    -webkit-filter: blur(0);
+    image-rendering: optimizeSpeed;             /*                     */
+    image-rendering: -moz-crisp-edges;          /* Firefox             */
+    image-rendering: -o-crisp-edges;            /* Opera               */
+    image-rendering: -webkit-optimize-contrast; /* Chrome (and Safari) */
+    image-rendering: optimize-contrast;         /* CSS3 Proposed       */
+    -ms-interpolation-mode: nearest-neighbor;   /* IE8+                */
 }
 
 .virtual-scroller {

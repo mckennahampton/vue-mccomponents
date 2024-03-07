@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, inject } from 'vue'
 import { useElementSize } from '@vueuse/core'
-import HeaderSorter from './HeaderSorter.vue'
 import HeaderResizer from './HeaderResizer.vue'
 import { type InternalColumn } from '../Table.vue'
+import { ref, onMounted, inject, type ComputedRef } from 'vue'
+import TransitionFade from '../../Transitions/TransitionFade.vue'
+import FasArrowUpWideShort from '../../Icons/FasArrowUpWideShort.vue'
+import FasArrowDownShortWide from '../../Icons/FasArrowDownShortWide.vue'
 
 interface Props {
     resize: boolean,
@@ -21,15 +23,29 @@ interface Props {
 const props = defineProps<Props>()
 
 const updateInnerColumnThSize = inject('updateInnerColumnThSize') as Function
+const toggleSortDir = inject('toggleSortDir') as Function
+const updateSorting = inject('updateSorting') as Function
+const udpateSortingMetric = inject('updateSortingMetric') as Function
+const sortAsc = inject('sortAsc') as ComputedRef
+const sorting = inject('sorting') as ComputedRef
+const sortingMetric = inject('sortingMetric') as ComputedRef
 
 const thRef = ref(null)
 const { width } = useElementSize(thRef)
-
 onMounted(() => updateInnerColumnThSize(props.column.uid, width.value))
+
+const sort = (metric: string) => {
+    if (props.sort && props.column.key && props.column.sort) {
+        udpateSortingMetric(metric)
+        updateSorting(true)
+        toggleSortDir()
+    }
+}
 
 </script>
 <template>
     <th v-if="column.caption != 'table_select'"
+        @click="sort(props.column.key)"
         :class="[
             column.classes,
             {'hover:cursor-pointer': props.sort && column.key},
@@ -39,26 +55,38 @@ onMounted(() => updateInnerColumnThSize(props.column.uid, width.value))
         ]"
         ref="thRef"
         class="whitespace-nowrap pl-2 py-1"
+        :data-width="props.column.width"
         :data-th="props.column.uid"
         :style="{
-            ...(props.column.useExplicitWidth) && {
+            ...(props.column.width > 0) && {
                 width: props.column.width + 'px'
             }
         }"
     >
-        <!-- Sorting handler -->
-        <HeaderSorter v-if="props.sort && props.column.sort" :dark="props.dark" :column="column" />
+            <!-- Header caption -->
+            <span class="select-none relative">
 
-        <!-- Non-sorting caption -->
-        <span v-else class="select-none relative">
-            {{ column.caption }}
-        </span>
+                <slot v-if="props.column.headerHasSlotContent" :name="props.column.headerSlotName" />
+                <template v-else>
+                    {{ props.column.caption }}
+                </template>
 
-        <!-- Resizing -->
-        <HeaderResizer v-if="props.resize && !props.isLast"
-            :index="props.index"
-            :column="props.column"
-        />
+                <TransitionFade>
+                    <span v-if="sorting && sortingMetric == props.column.key"
+                        class="absolute top-[50%] transform -translate-y-[50%] -right-[20px]"
+                    >
+                        <FasArrowDownShortWide v-if="sortAsc":class="[dark ? 'fill-neutral-400' : 'fill-neutral-500']" />
+                        <FasArrowUpWideShort v-else :class="[dark ? 'fill-neutral-400' : 'fill-neutral-500']" />
+                    </span>
+                </TransitionFade>
+            </span>
+
+            <!-- Resizing -->
+            <HeaderResizer v-if="props.resize && !props.isLast"
+                :index="props.index"
+                :column="props.column"
+            />
+
         
     </th>
 </template>

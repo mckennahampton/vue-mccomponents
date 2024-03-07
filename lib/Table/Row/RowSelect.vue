@@ -8,6 +8,7 @@ import PrimaryButton from '../../Buttons/PrimaryButton.vue'
 interface Props {
     item: any,
     itemCount: number,
+    scroll: boolean,
     dark: boolean,
 }
 const props = defineProps<Props>()
@@ -19,7 +20,7 @@ const tableUid = inject('tableUid') as string
 </script>
 <template>
 
-    <component :is="props.itemCount > 50 ? 'div' : 'td'"
+    <component :is="scroll ? 'div' : 'td'"
         @click="toggleSelectItem(props.item)"
         class="selectButton hover:cursor-pointer text-black text-center !px-1 print:invisible"
         :class="[
@@ -29,14 +30,11 @@ const tableUid = inject('tableUid') as string
         data-select
     >
         <!-- Mobile -->
-        <!-- @vue-ignore -->
         <PrimaryButton
             class="w-full block md:hidden"
             :class="[{'bg-neutral-500': selectState[item[tableUid + '_uid']]}]"
         >
-            {{ //@ts-ignore
-                selectState[item[tableUid + '_uid']] ? 'Unselect' : 'Select'
-            }}
+            {{  selectState[item[tableUid + '_uid']] ? 'Unselect' : 'Select' }}
         </PrimaryButton>
 
         <!-- Desktop -->

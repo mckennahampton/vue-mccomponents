@@ -77,7 +77,7 @@ onBeforeMount(() => {
         </div>
         <Table
             class="justify-self-center"
-            paginate
+            row-handling="paginate"
             sort
             resize
             selectable

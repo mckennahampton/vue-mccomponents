@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import Select from '../../../Inputs/Select.vue'
-import InputGroup from '../../../Inputs/InputGroup.vue'
 import { ref, computed, inject, onBeforeMount } from 'vue'
 
 
@@ -55,24 +54,40 @@ onBeforeMount(() => {
 })
 
 const filterSelected = (metric: string, value: string) => {
-    
-    // Set all values to false except the target
-    filters.value
-    ?.find(filter => filter.metric == metric)
-    ?.values.forEach(filterValue => {
-        filterValue.value == value
-        ? filterValue.active = true
-        : filterValue.active = false
-    })
 
+    if (value) {
+        // Set all values to false
+        filters.value
+        ?.find(filter => filter.metric == metric)
+        ?.values.forEach(filterValue => filterValue.active = false)
+
+        // Set the desired value to true
+        filters.value
+        ?.find(filter => filter.metric == metric)
+        ?.values.forEach(filterValue => {
+            filterValue.value == value
+            ? filterValue.active = true
+            : filterValue.active = false
+        })
+    }
+    else {
+        // Set everything to false except the first "all" option
+        filters.value.forEach(filter => {
+            filter.values.forEach(filterValue => {
+                filterValue.value == 'all'
+                ? filterValue.active = true
+                : filterValue.active = false
+            })
+        })
+    }
     updateLaravelFormattedFilters(laravelFormattedFilters.value)
 }
 
 const resetFilters = () => {
 
     // Reset the local filter values
-    filters.value?.forEach(fitler => {
-        fitler.values.forEach(filterValue => {
+    filters.value?.forEach(filter => {
+        filter.values.forEach(filterValue => {
             filterValue.value == 'all'
             ? filterValue.active = true
             : filterValue.active = false
@@ -115,19 +130,16 @@ defineExpose({
 
 </script>
 <template>
-    <InputGroup v-for="filter in filters">
-        <Select
-            class="max-w-1/2 md:max-w-1/3 lg:max-w-1/4"
-            button-classes="pb-1 pt-5 min-w-[175px]"
-            :items="filter.values"
-            :model-value="filter.values.find(val => val.active)?.value?.toString()"
-            @update:model-value="val => filterSelected(filter.metric, val)"
-            :searchable="filter.searchable"
-            ref="filterRefs"
-            :label="filter.label ?? filter.metric"
-            label-style="capitalize"
-            :dark="props.dark"
-        />
-    </InputGroup>
-
+    <Select v-for="filter in filters"
+        class="max-w-1/2 md:max-w-1/3 lg:max-w-1/4"
+        button-classes="pb-1 pt-5 min-w-[175px]"
+        :items="filter.values"
+        :model-value="filter.values.find(val => val.active)?.value?.toString()"
+        @update:model-value="val => filterSelected(filter.metric, val)"
+        :searchable="filter.searchable"
+        ref="filterRefs"
+        :label="filter.label ?? filter.metric"
+        label-style="capitalize"
+        :dark="props.dark"
+    />
 </template>

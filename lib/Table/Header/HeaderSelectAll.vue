@@ -10,7 +10,6 @@ interface Props {
     pageItems: any[],
     dark: boolean,
     column: InternalColumn,
-    scroll: boolean
 }
 const props = defineProps<Props>()
 
@@ -18,18 +17,14 @@ const toggleSelectAll = inject('toggleSelectAll') as (payload: MouseEvent) => vo
 const allSelected = inject('allSelected') as ComputedRef
 const allDisabled = inject('allDisabled') as ComputedRef
 
-const updateInnerColumnThSize = inject('updateInnerColumnThSize') as Function
-
 const thRef = ref(null)
-const { width } = useElementSize(thRef)
-
-onMounted(() => updateInnerColumnThSize(props.column.uid, width.value))
 
 </script>
 <template>
     <th
         @click.stop="toggleSelectAll"
-        class="hover:cursor-pointer text-center !px-1 print:invisible !w-[60px]"
+        class="hover:cursor-pointer text-center !px-1 print:invisible"
+        style="width: 60px; min-width: 60px; max-width: 60px"
         data-th-select
         :class="[
             {'disabled': allDisabled},
@@ -46,6 +41,5 @@ onMounted(() => updateInnerColumnThSize(props.column.uid, width.value))
                 :class="[dark ? 'fill-neutral-500' : 'fill-black']"
             />
         </span>
-
     </th>
 </template>
