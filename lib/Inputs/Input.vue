@@ -1,28 +1,44 @@
 <script setup lang="ts">
 import uid from '../Utilities/uid'
-import Tooltip from '../Tooltip.vue'
-import { ref, watch, computed } from 'vue'
-import FasCircleQuestion from '../Icons/FasCircleQuestion.vue'
+import { type Validation } from './Validations.vue'
+import GlobalLabel from './Partials/GlobalLabel.vue'
+import { ref, watch, computed, onMounted } from 'vue'
+import DropdownItem from '../Buttons/DropdownItem.vue'
+import { type ValidationState } from './Partials/InputProps'
+import WithFloatingPanel, { type Placement } from '../Traitables/WithFloatingPanel.vue'
+
+export interface Search {
+    items: (string | number | object | null)[],
+    placement?: Placement,
+    offset?: number,
+}
 
 const props = withDefaults(defineProps<{
     inputInitialValue?: string | number,
-    modelValue?: string | number | object,
-    label?: string,
+    modelValue?: string | number | object | null,
     showValidated?: boolean,
     labelStyles?: any,
-    emptyPlaceholder?: string,
+    placeholder?: string,
     format?: 'string' | 'number',
     focus?: boolean,
     ignoreValidation?: boolean,
     renderLabel?: boolean,
     dark?: boolean,
+    validations?: Validation[],
+    search?: Search,
+    autocomplete?: boolean,
+    optional?: boolean,
+    readonly?: boolean,
+    validationState?: ValidationState,
 }>(), {
     showValidated: false,
     format: 'string',
     focus: false,
     ignoreValidation: false,
     renderLabel: true,
-    dark: false
+    dark: false,
+    optional: false,
+    readonly: false,
 })
 
 const validNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
@@ -30,8 +46,9 @@ const validSpecialKeys = ['Backspace', 'Tab', 'Shift', 'Enter', 'ArrowLeft', 'Ar
 
 const emit = defineEmits(["update:modelValue"]);
 
-const input = ref(null)
+const input = ref<HTMLElement | null>(null)
 const inputValue = ref(props.modelValue ?? null)
+const defaultValue = ref(props.modelValue ?? null)
 const inputUid = uid()
 
 const validate = (e: KeyboardEvent) => {
@@ -51,42 +68,102 @@ defineExpose({
     input
 })
 
+onMounted(() => {
+    //@ts-ignore
+    if (props.focus) setTimeout(() => input.value?.focus(), 100)
+})
+
+const filteredItems = computed(() => {
+    if (!props.search) return
+    return props.search?.items?.filter(item => {
+        if (inputValue.value)
+        {
+            if ( item?.toString().toLowerCase().includes(inputValue.value.toString().toLowerCase()) ) return true
+            else return false
+        }
+
+        return true
+    })
+})
+
+const selected = (item: string | number | object | null) => {
+    inputValue.value = item
+    emit('update:modelValue', item)
+}
+
+const reset = () => {
+    if (defaultValue.value) inputValue.value = defaultValue.value
+    emit('update:modelValue', inputValue.value)
+}
+
+const clear = () => {
+    inputValue.value = null
+    emit('update:modelValue', inputValue.value)
+}
+
 </script>
 <template>
-    <div class="flex flex-col">
-        <label v-if="renderLabel"
-            class="text-[13px] hover:cursor-text text-black font-bold delay-0 transform transition-all"
-            :class="[
-                {'invisible':  !props.label},
-                props.labelStyles
-            ]"
-            :for="inputUid"
+    <div class="flex flex-col group">
+        <GlobalLabel v-if="$slots.label || props.renderLabel"
+            :input-uid="inputUid"
+            :label-styles="props.labelStyles"
+            :optional="props.optional"
+            :has-value="Boolean(inputValue)"
+            :has-default-value="props.readonly ? false : Boolean(defaultValue)"
+            :value-is-defaulted="inputValue === defaultValue"
+            :validation-state="props.validationState"
+            :dark="props.dark"
+            @reset="reset"
+            @clear="clear"
         >
-            {{ props.label ?? 'invisible' }}
+            <template v-if="$slots.label" #label>
+                <slot name="label" />
+            </template>
+            <template v-if="$slots.tooltipHeader" #tooltipHeader>
+                <slot name="tooltipHeader" />
+            </template>
+            <template v-if="$slots.tooltip"  #tooltip>
+                <slot name="tooltip" />
+            </template>
+        </GlobalLabel>
 
-            <Tooltip v-if="$slots.tooltip">
-                <template #tooltip>
-                    <slot v-if="$slots.tooltip" name="tooltip" />
-                </template>
-                <FasCircleQuestion />
-            </Tooltip>
-            
-        </label>
+        <WithFloatingPanel
+            class="!w-full"
+            :show-icon="false"
+            :offset="props.search?.offset ?? 0"
+            :functional="Boolean(props.search)"
+            :placement="props.search?.placement ?? 'bottom'"
+            :parent-classes="'!p-0 !font-normal w-full border-transparent'"
+            :panel-classes="'!text-base max-h-[300px]'"
+        >
+            <template #parent="slotProps">
+                <input
+                    v-bind="$attrs"
+                    @keydown="e => validate(e)"
+                    style="box-shadow: none;"
+                    :class="[
+                        emptyClass,
+                        {'border-b-green-500 ': props.validationState?.errors && props.validationState.errors.length > 0 && showValidated},
+                        props.validationState?.errors && props.validationState.errors.length > 0 ? 'border-red-500' : 'border-neutral-300',
+                        props.dark ? 'text-white !border-b-neutral-700' : 'text-black !border-b-neutral-400'
+                    ]"
+                    class="w-full h-10 text-gray-900 border-b-2 bg-transparent focus:outline-none ellipse"
+                    v-model="inputValue"
+                    :id="inputUid"
+                    :placeholder="placeholder" 
+                    :autocomplete="props.autocomplete ? 'on' : 'off'"
+                    @blur="Boolean(props.search) ? slotProps.openPanel : null"
+                    :readonly="props.readonly"
+                    ref="input"
+                />
+            </template>
+            <template v-if="props.search && filteredItems" #panel>
+                <DropdownItem v-for="item in filteredItems" @click="selected(item)" :dark="props.dark">
+                    {{ item }}
+                </DropdownItem>
+            </template>
+        </WithFloatingPanel>
     </div>
-\
-    <input
-        v-bind="$attrs"
-        @keydown="e => validate(e)"
-        style="box-shadow: none;"
-        class="w-full h-10 border-b-2 bg-transparent focus:border-red-500"
-        :class="[
-            emptyClass,
-            props.dark ? 'text-white !border-b-neutral-700' : 'text-black !border-b-neutral-400'
-        ]"
-        v-model="inputValue"
-        :id="inputUid"
-        ref="input"
-    />
 </template>
 <style scoped>
 input::-webkit-outer-spin-button,
@@ -95,15 +172,23 @@ input::-webkit-inner-spin-button {
     margin: 0;
 }
 
-/* Read-only */ input[readonly] { @apply pointer-events-none text-center !text-black }
+/* Read-only */ input[readonly] { @apply pointer-events-none text-center }
 
+label
+{
+    @apply translate-y-8 ml-2
+}
 
 /* Floating label styles */
 label:has(~ input:focus),
 label:has(~ input:placeholder-shown),
-label:has(~ input.not-empty)
+label:has(~ input.not-empty),
+label:has(~ div input:focus),
+label:has(~ div input:placeholder-shown),
+label:has(~ div input.not-empty),
+label.label-required
 {
-    @apply transform -translate-y-10 text-black left-0 delay-0 
+    @apply translate-y-0 ml-0
 }
 
-</style>
+</style>./Validations.vue

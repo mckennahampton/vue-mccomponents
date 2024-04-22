@@ -15,8 +15,8 @@ const props = withDefaults(defineProps<Props>(), {
 const src = ref()
 
 onBeforeMount(async () => {
-    if (props.src) return props.src
-    if (props.preview) return await loadImagePreview(props.preview)
+    if (props.src) src.value = props.src
+    if (props.preview) src.value = await loadImagePreview(props.preview)
     return ''
 })
 

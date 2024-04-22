@@ -136,19 +136,13 @@ defineExpose({
             empty-placeholder="Direction"
             :items="dirEntries"
             @update:model-value="val => dirSelected(val)"
-            :class="[{'disabled': entries.some(entry => entry.active && entry.value == 'none')}]"
+            :class="[
+                {'disabled': entries.some(entry => entry.active && entry.value == 'none')},
+                {'disabled-dark': entries.some(entry => entry.active && entry.value == 'none') && props.dark}
+            ]"
             ref="dirRef"
             v-model="defaultDir"
             :dark="props.dark"
         />
     </div>
 </template>
-<style scoped>
-.disabled {
-    @apply relative
-}
-
-.disabled:after {
-    @apply absolute content-[''] top-0 left-0 h-full w-full transition-all bg-white opacity-50 hover:cursor-not-allowed
-}
-</style>

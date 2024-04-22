@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import uid from '../Utilities/uid'
-import Tooltip from '../Tooltip.vue'
 import '@vuepic/vue-datepicker/dist/main.css'
 import VueDatePicker from '@vuepic/vue-datepicker'
-import FasCircleQuestion from '../Icons/FasCircleQuestion.vue'
+import GlobalLabel from './Partials/GlobalLabel.vue'
+import { type ValidationState } from './Partials/InputProps'
 
 interface Props {
     modelValue: Date | null,
@@ -16,66 +16,85 @@ interface Props {
     label?: string,
     showValidated?: boolean,
     labelStyles?: any,
-    tooltip?: string,
-    tooltipHeader?: string,
     placeholder?: string,
+    allowTextInput?: boolean,
+    resetable?: boolean,
+    optional?: boolean,
     dark?: boolean,
     renderLabel?: boolean,
+    validationState?: ValidationState
 }
 const props = withDefaults(defineProps<Props>(), {
     clearable: false,
     enableTime: false,
     showValidated: false,
+    allowTextInput: true,
+    renderLabel: false,
+    optional: false,
+    resetable: true,
     dark: false,
-    renderLabel: true,
 })
 const emit = defineEmits(['update:modelValue'])
 
-const dateModel = ref(props.modelValue)
 const inputUid = uid()
+
+const dateModel = ref(props.modelValue)
+const defaultValue = ref(props.resetable ? props.modelValue : undefined)
 
 watch(dateModel, () => emit('update:modelValue', dateModel.value))
 watch(props, () => dateModel.value = props.modelValue)
 
+const reset = () => {
+    if (defaultValue.value) dateModel.value = defaultValue.value
+    emit('update:modelValue', dateModel.value)
+}
+
+const clear = () => {
+    dateModel.value = null
+    emit('update:modelValue', dateModel.value)
+}
+
 </script>
 <template>
-    <div class="flex flex-col">
-        <label v-if="renderLabel"
-            class="text-[13px] hover:cursor-text text-black font-bold delay-0 transform transition-all"
-            :class="[
-                {'invisible':  !props.label},
-                props.labelStyles
-            ]"
-            :for="inputUid"
+    <div class="flex flex-col group">
+        <GlobalLabel v-if="$slots.label || props.renderLabel"
+            :input-uid="inputUid"
+            :label-styles="props.labelStyles"
+            :optional="props.optional"
+            :has-value="Boolean(dateModel)"
+            :has-default-value="props.resetable ? Boolean(defaultValue) : false"
+            :value-is-defaulted="dateModel === defaultValue"
+            :validation-state="props.validationState"
+            :dark="props.dark"
+            @reset="reset"
+            @clear="clear"
         >
-            {{ props.label ?? 'invisible' }}
+            <template v-if="$slots.label" #label>
+                <slot name="label" />
+            </template>
+            <template v-if="$slots.tooltipHeader" #tooltipHeader>
+                <slot name="tooltipHeader" />
+            </template>
+            <template v-if="$slots.tooltip"  #tooltip>
+                <slot name="tooltip" />
+            </template>
+        </GlobalLabel>
 
-            <Tooltip v-if="$slots.tooltip">
-                <template v-if="$slots.tooltipHeader" #header>
-                    <slot name="tooltipHeader" />
-                </template>
-                <template #tooltip>
-                    <slot v-if="$slots.tooltip" name="tooltip" />
-                </template>
-                <FasCircleQuestion />
-            </Tooltip>
-            
-        </label>
+        <VueDatePicker
+            v-bind="$attrs"
+            v-model="dateModel"
+            class="max-w-[150px] rounded-none"
+            :class="props.classes"
+            :input-class-name="`!border-neutral-400 ${props.dark ? '!border-neutral-700' : ''}`"
+            auto-apply
+            :clearable="props.clearable"
+            :enable-time-picker="props.enableTime"
+            :max-date="props.maxDate"
+            :min-date="props.minDate"
+            :uid="inputUid"
+            :dark="props.dark"
+        />
     </div>
-    <VueDatePicker
-        v-bind="$attrs"
-        v-model="dateModel"
-        class="max-w-[150px] rounded-none"
-        :class="props.classes"
-        :input-class-name="`!border-neutral-400 ${props.dark ? '!border-neutral-700' : ''}`"
-        auto-apply
-        :clearable="props.clearable"
-        :enable-time-picker="props.enableTime"
-        :max-date="props.maxDate"
-        :min-date="props.minDate"
-        :uid="inputUid"
-        :dark="props.dark"
-    />
 </template>
 <style scoped>
 :deep(.dp__input) {

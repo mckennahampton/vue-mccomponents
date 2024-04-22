@@ -139,7 +139,7 @@ defineExpose({
         :searchable="filter.searchable"
         ref="filterRefs"
         :label="filter.label ?? filter.metric"
-        label-style="capitalize"
+        label-styles="capitalize"
         :dark="props.dark"
     />
 </template>

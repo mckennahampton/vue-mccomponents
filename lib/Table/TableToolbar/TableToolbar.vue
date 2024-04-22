@@ -127,6 +127,7 @@ const hasExportButton = (type: 'csv' | 'pdf' | 'print' | 'reportTitle') => {
                                 
                                 <!-- Quick Filter -->
                                 <Input
+                                    :render-label="false"
                                     placeholder="Filter Visible Rows..."
                                     v-model="textFilter"
                                     class="max-md:w-[200px] md:w-auto !border-x-0 !border-t-0 !outline-none !shadow-[none]"

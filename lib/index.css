@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 @layer utilities {
-    /* .disabled {
-        @apply relative
+    .disabled {
+        @apply relative opacity-50
     }
 
     .disabled:after {
-        @apply absolute content-[''] top-0 left-0 h-full w-full transition-all bg-white opacity-50 hover:cursor-not-allowed
-    } */
+        @apply absolute content-[''] top-0 left-0 h-full w-full transition-all hover:cursor-not-allowed
+    }
 }

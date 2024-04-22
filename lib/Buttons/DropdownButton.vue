@@ -6,7 +6,7 @@
     import { resolveXClip, resolveYClip } from '../Utilities/clipping'
     import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue'
 
-    type Placement = 'bottom' | 'top' | 'left' | 'right' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'right-top' | 'right-bottom' | 'left-top' | 'left-bottom'
+    export type Placement = 'bottom' | 'top' | 'left' | 'right' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'right-top' | 'right-bottom' | 'left-top' | 'left-bottom'
     interface Props {
         dropdownClasses?: object | string | string[],
         buttonClasses?: object | string | string[],
@@ -14,6 +14,7 @@
         placement?: Placement,
         showIcon?: boolean,
         disabled?: boolean,
+        functional?: boolean,
         offset?: number,
         dropdownId?: string,
         noMinWidth?: boolean,
@@ -22,7 +23,10 @@
     const props = withDefaults(defineProps<Props>(), {
         noMinWidth: false,
         dark: false,
+        functional: true,
     })
+
+    const emit = defineEmits(['opened', 'closed'])
 
     const open = ref(false)
     const dropdown = ref<HTMLInputElement | null>(null)
@@ -153,6 +157,7 @@
     })
 
     const toggleDropdown = () => {
+        if (!props.functional) return
         setScroll()
         if(!disabled.value) {
             open.value = !open.value;
@@ -160,7 +165,15 @@
         updateParentRect()
     }
 
+    const openDropdown = () => {
+        if (!props.functional) return
+        setScroll()
+        open.value = true
+        updateParentRect()
+    }
+
     const closeDropdown = (e?: Event) => {
+        if (!props.functional) return
         if (e && e.target == dropdown.value) return
         open.value = false
         dropdown.value ? dropdown.value.scrollTop = 0 : null
@@ -211,12 +224,13 @@
 
     watch(open, () => {
         if (open.value) {
-
+            emit('opened')
             window.addEventListener('scroll', closeDropdown, true)
             window.addEventListener('resize', closeDropdown, true)
             window.addEventListener('click', closeOnOutsideClick, true)
         }
         else {
+            emit('closed')
             window.removeEventListener('scroll', closeDropdown, true)
             window.removeEventListener('resize', closeDropdown, true)
             window.removeEventListener('click', closeOnOutsideClick, true)
@@ -242,7 +256,7 @@
             ref="dropdownButton"
             tabindex="-1"
         >
-            <slot name="button" :open="open" :toggleDropdown="toggleDropdown"></slot>
+            <slot name="button" :open="open" :toggleDropdown="toggleDropdown" :openDropdown="openDropdown"></slot>
             <span v-if="showIcon" class="h-4 w-4 flex items-center justify-center transition ease-in-out duration-100" :class="[open ? rotationClass : '']">
                 <FasCaretDown
                     :class="[
