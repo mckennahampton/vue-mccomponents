@@ -10,4 +10,16 @@
     .disabled:after {
         @apply absolute content-[''] top-0 left-0 h-full w-full transition-all hover:cursor-not-allowed
     }
+
+    .scroll-y { @apply overflow-y-auto box-border }
+    .scroll-y::-webkit-scrollbar { width: 9px; }
+    .scroll-y::-webkit-scrollbar-track { background: transparent; }
+    .scroll-y::-webkit-scrollbar-thumb { border: transparent; }
+    .scroll-y::-webkit-scrollbar-thumb  { @apply bg-neutral-400 }
+
+    .scroll-x { @apply overflow-x-auto }
+    .scroll-x::-webkit-scrollbar { height: 9px; }
+    .scroll-x::-webkit-scrollbar-track { background: transparent; }
+    .scroll-x::-webkit-scrollbar-thumb { border: transparent; }
+    .scroll-x::-webkit-scrollbar-thumb  { @apply bg-neutral-400 }
 }

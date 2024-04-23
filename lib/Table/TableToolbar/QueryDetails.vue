@@ -2,7 +2,14 @@
 import VR from '../../Layout/VR.vue'
 import { inject, type ComputedRef, computed } from 'vue'
 import { timestampToISO } from '../../Utilities/dateHelpers'
-import { type LaravelFormattedFilter, type LaravelFormattedOrderBy } from '../Table.vue'
+import { type LaravelFormattedFilter, type LaravelFormattedOrderBy } from '../TableTypes'
+
+const props = withDefaults(defineProps<{
+    dark?: boolean,
+}>(), {
+    dark: false,
+})
+
 
 const startDate = inject('startDate') as ComputedRef<Date>
 const endDate = inject('endDate') as ComputedRef<Date>
@@ -20,7 +27,13 @@ const orderByDir = computed(() => laravelFormattedOrderBy.value.dir == 'asc' ? '
 </script>
 <template>
 
-    <div v-if="!loading" class="flex items-center justify-start gap-5 italic text-neutral-600">
+    <div v-if="!loading"
+        class="flex items-center justify-start gap-5 italic"
+        :class="[
+            {'text-neutral-600': !props.dark},
+            {'text-neutral-300': props,dark}
+        ]"
+    >
 
         <!-- Item total count -->
         <span>
@@ -44,7 +57,7 @@ const orderByDir = computed(() => laravelFormattedOrderBy.value.dir == 'asc' ? '
         </template>
 
         <!-- Order By -->
-        <template v-if="laravelFormattedOrderBy.metric && externalPagination">
+        <template v-if="laravelFormattedOrderBy && laravelFormattedOrderBy.metric && externalPagination">
             <VR inner-classes="!mx-0"/>
             <span>
                 <span class="_label">Ordered By:</span> <span class="capitalize">{{ orderByTitle }}</span>, <span>{{ orderByDir }}</span>

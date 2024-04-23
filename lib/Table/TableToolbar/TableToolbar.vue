@@ -15,11 +15,11 @@ import MutedButton from '../../Buttons/MutedButton.vue'
 import FasCaretDown from '../../Icons/FasCaretDown.vue'
 import DropdownButton from '../../Buttons/DropdownButton.vue'
 import AccordionItem from '../../Accordion/AccordionItem.vue'
-import { type ExportConfig, InternalColumn } from '../Table.vue'
+import { type ExportConfig, InternalColumn } from '../TableTypes'
 import TransitionFade from '../../Transitions/TransitionFade.vue'
 import OrderBy, { type OrderByEntry } from './Filters/OrderBy.vue'
 import TableFilters, { type Filter} from './Filters/TableFilters.vue'
-import { ref, useSlots, inject, onMounted, type ComputedRef, watch } from 'vue'
+import { ref, useSlots, inject, onMounted, type ComputedRef } from 'vue'
 import { type LengthAwarePaginator } from '../../Types/Laravel/LengthAwarePaginator'
 
 interface Props {
@@ -159,15 +159,22 @@ const hasExportButton = (type: 'csv' | 'pdf' | 'print' | 'reportTitle') => {
                                 <!-- Export buttons -->
                                 <template v-if="props.showExport">
                                     <VR class="max-lg:hidden" />
-                                    <ExportCsv
+                                    <ExportCsv v-if="hasExportButton('csv')"
                                         class="max-lg:hidden"
                                         :dark="dark"
                                         :items="props.items"
                                         :report-title="props?.exportConfig?.reportTitle"
                                         :columns="props.columns"
                                     />
-                                    <ExportPdf class="max-lg:hidden" :dark="dark" :report-title="props?.exportConfig?.reportTitle" />
-                                    <PrintTable class="max-lg:hidden" :dark="dark" />
+                                    <ExportPdf v-if="hasExportButton('pdf')"
+                                        class="max-lg:hidden"
+                                        :dark="dark"
+                                        :report-title="props?.exportConfig?.reportTitle"
+                                    />
+                                    <PrintTable v-if="hasExportButton('print')"
+                                        class="max-lg:hidden"
+                                        :dark="dark"
+                                    />
                                 </template>
 
                                 <!-- /Desktop menu buttons -->
@@ -320,7 +327,7 @@ const hasExportButton = (type: 'csv' | 'pdf' | 'print' | 'reportTitle') => {
         </div>
 
         <div class="w-full flex items-center justify-between gap-5">
-            <QueryDetails />
+            <QueryDetails :dark="props.dark" />
 
             <!-- Non-fixed layout paginate buttons -->
             <PaginateButtons v-if="props.paginate"

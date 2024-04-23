@@ -128,9 +128,10 @@ defineExpose({
             @update:model-value="val => entrySelected(val)"
             searchable
             ref="orderByRef"
-            label="Order By"
             :dark="props.dark"
-        />
+        >
+            <template #label>Order By</template>
+        </Select>
         <Select
             button-classes="pb-1 pt-5 min-w-[175px]"
             empty-placeholder="Direction"

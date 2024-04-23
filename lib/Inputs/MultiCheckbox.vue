@@ -68,6 +68,7 @@ const clear = () => checkedBoxes.value = []
             :optional="props.optional"
             :value-is-defaulted="defaultValues === checkedBoxes"
             :validation-state="props.validationState"
+            :dark="props.dark"
             @reset="reset"
             @clear="clear"
         >

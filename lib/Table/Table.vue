@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends object">
 import uid from '../Utilities/uid'
 import { useElementSize } from '@vueuse/core'
 import RowListHandler from './Row/RowListHandler.vue'
@@ -9,76 +9,28 @@ import HeaderSelectAll from './Header/HeaderSelectAll.vue'
 import TableToolbar from './TableToolbar/TableToolbar.vue'
 import { type OrderByEntry } from './TableToolbar/Filters/OrderBy.vue'
 import { type LengthAwarePaginator } from '../Types/Laravel/LengthAwarePaginator'
-import { ref, onBeforeMount, computed, watch, useSlots, provide, reactive, onMounted, type Ref } from 'vue'
+import {
+    ref, onBeforeMount, computed, watch, useSlots, provide,
+    reactive, onMounted
+} from 'vue'
+import {
+    type Column,
+    type InternalColumn,
+    type LaravelFormattedFilter,
+    type Filter,
+    type ExportConfig,
+    type Direction,
+    type LaravelFormattedOrderBy,
+    type TableItem,
+    type RowActionButtonConfig
+} from './TableTypes'
 
-//#region Types
-
-export interface ExternalPaginationFetchArgs {
-    page: number,
-    rows: number,
-    start?: Date,
-    end?: Date
-}
-
-export interface CellOptions {
-    classes?: string | any[] | object,
-    suggestedWidth?: number,
-    ellipse?: boolean,
-    useMinimumSpace?: boolean,
-}
-
-export interface ExportOptions {
-    isDate?: boolean,
-    dateFormat?: 'timestampToISO' | 'timestampToLocaleTime' | 'timestampToLocaleDate' | 'timestampToFullFormatted' | 'timestampToAbreviatedDate'
-    skip?: boolean,
-}
-
-export interface ExportConfig {
-    csv?: boolean,
-    pdf?: boolean,
-    print?: boolean,
-    reportTitle?: string,
-}
-
-export interface Column {
-    caption: string,
-    captionProps?: any,
-    key: string,
-    classes?: string | any[] | object,
-    cellOptions?: CellOptions,
-    exportOptions?: ExportOptions,
-    sort?: boolean,
-}
-
-export interface InternalColumn extends Column {
-    uid: string,
-    width: number,
-    cellSlotName: string,
-    headerSlotName: string,
-    headerHasSlotContent: boolean,
-    useExplicitWidth: boolean,
-}
-
-interface FilterValue {
-    value: string | number | boolean | null,
-    title?: string,
-    active?: boolean,
-}
-
-interface Filter {
-    metric: string,
-    values: FilterValue[],
-    current?: string | null,
-    searchable?: boolean,
-    label?: string,
-}
-
-interface Props {
+interface Props<T> {
     dark?: boolean,
     toolbar?: boolean,
     rowHandling?: 'paginate' | 'scroll'
     columns: Column[],
-    items?: any[],
+    items?: TableItem<T>[],
     sort?: boolean,
     resize?: boolean,
     selectable?: boolean,
@@ -94,11 +46,11 @@ interface Props {
     itemUid?: string,
     defaultRowsPerPage?: 10 | 20 | 50 | 'all',
     toolbarClasses?: any,
+    rowActionButtonConfig?: RowActionButtonConfig
 }
 //#endregion
 
-const props = withDefaults(defineProps<Props>(), {
-    toolbar: true,
+const props = withDefaults(defineProps<Props<T>>(), {
     loading: false,
     externalPagination: false,
     showDatePicker: false,
@@ -107,6 +59,7 @@ const props = withDefaults(defineProps<Props>(), {
     resize: true,
     selectable: false,
     defaultRowsPerPage: 10,
+    toolbar: true,
     dark: false,
     rowHandling: 'paginate'
 })
@@ -140,12 +93,9 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     })
 
     // Table Transition properties
-    type Direction = 'forwards' | 'backwards' | 'none' | 'initial'
-    const pageStepDirection = ref('initial' as Direction)
+    const pageStepDirection = ref<Direction>('initial')
     const isTransitioning = ref(false)
-    const updatePageStepDirection = (dir: Direction) => {
-        pageStepDirection.value = dir
-    }
+    const updatePageStepDirection = (dir: Direction) => pageStepDirection.value = dir
     const updateIsTransitioning = (val: boolean) => isTransitioning.value = val
     onBeforeMount(() => {
         provide('updatePageStepDirection', updatePageStepDirection)
@@ -157,7 +107,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     // Table UID
     const tableUid = uid()
     const tableConUid = uid()
-    const tableConRef = ref(null)
+    const tableConRef = ref<HTMLElement | null>(null)
     onBeforeMount(() => {
         provide('tableUid', tableUid)
         provide('tableConUid', tableConUid)
@@ -167,7 +117,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 
 
     // Table template ref
-    const tableRef = ref(null) as Ref<HTMLElement | null>
+    const tableRef = ref<HTMLElement | null>(null)
     const { width: tableWidth } = useElementSize(tableRef)
     onBeforeMount(() => provide('tableRef', tableRef))
     // *******************************************************************
@@ -256,12 +206,8 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 
 
     // Laravel query filters
-    export interface LaravelFormattedFilter {
-        metric: string,
-        value: any
-    }
-    const laravelFormattedFilters = ref([] as LaravelFormattedFilter[])
-    const dirtyFormattedFilters = ref([] as LaravelFormattedFilter[])
+    const laravelFormattedFilters = ref<LaravelFormattedFilter[]>([])
+    const dirtyFormattedFilters = ref<LaravelFormattedFilter[]>([])
     const updateLaravelFormattedFilters = (vals: LaravelFormattedFilter[]) => dirtyFormattedFilters.value = vals
     onBeforeMount(() => {
         provide('laravelFormattedFilters', laravelFormattedFilters)
@@ -270,16 +216,11 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     // *******************************************************************
 
     // Laravel order by entries
-    export interface LaravelFormattedOrderBy {
-        title?: string,
-        metric: string,
-        dir: 'asc' | 'desc'
-    }
-    const laravelFormattedOrderBy = ref({} as LaravelFormattedOrderBy)
-    const dirtyLaravelFormattedOrderBy = ref({} as LaravelFormattedOrderBy)
+    const laravelFormattedOrderBy = ref<LaravelFormattedOrderBy | null>()
+    const dirtyLaravelFormattedOrderBy = ref<LaravelFormattedOrderBy | null>()
     const updateLaravelFormattedOrderBy = (entry: LaravelFormattedOrderBy) => {
-        if (!entry) dirtyLaravelFormattedOrderBy.value = {} as LaravelFormattedOrderBy
-        else if (entry.metric == 'none') dirtyLaravelFormattedOrderBy.value = {} as LaravelFormattedOrderBy
+        if (!entry) dirtyLaravelFormattedOrderBy.value = null
+        else if (entry.metric == 'none') dirtyLaravelFormattedOrderBy.value = null
         else dirtyLaravelFormattedOrderBy.value = entry
     }
 
@@ -315,9 +256,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
 
     // Sorting
     const sortAsc = ref(false)
-    const toggleSortDir = () => {
-        sortAsc.value = !sortAsc.value
-    }
+    const toggleSortDir = () => sortAsc.value = !sortAsc.value
     const sortingMetric = ref('')
     const updateSortingMetric = (metric: string) => sortingMetric.value = metric
     const sorting = ref(false)
@@ -340,19 +279,16 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     // *******************************************************************
 
     // Selectable
-    export interface SelectState {
-        [key: string]: boolean,
-    }
     const itemsWithUid = ref([] as any[])
     const selectState = reactive({} as any)
     const preparePropItems = () => {
         itemsWithUid.value = []
-        itemsWithUid.value = props.items?.map((item, index) => ({
+        itemsWithUid.value = props.items?.map(item => ({
             ...item,
-            [tableUid + '_uid']: props.itemUid ? item[props.itemUid] : uid(),
+            [tableUid + '_uid']: props.itemUid ? item[props.itemUid as keyof TableItem<T>] : uid(),
         })) ?? []
 
-        itemsWithUid.value.forEach((item, index) => selectState[item[tableUid + '_uid']] = false)
+        itemsWithUid.value.forEach(item => selectState[item[tableUid + '_uid']] = false)
     }
 
     // This is critical for properly rendering item changes. If a specific item UID key is provided,
@@ -361,29 +297,30 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     // External pagination doesn't need this list key to change
     const listKey = computed(() => {
         if (props.externalPagination) return 1
-        else
+        else if (itemsWithUid.value)
         {
-            let temp = itemsWithUid.value.map(item => item[tableUid + '_uid'])
-            temp.sort()
+            let key = props.itemUid ?? tableUid + '_uid'
+            let temp = itemsWithUid.value.map(item => item[key])
             return temp.toString()
         }
     })
 
     // Reactively update the internal table items when the props change
     onBeforeMount(() => preparePropItems())
-    watch(() => props.items, (newItems, oldItems) => preparePropItems())
+    watch(() => props.items, () => preparePropItems())
 
     const selectedCount = computed(() => Object.values(selectState).filter(e => e).length)
     const allDisabled = computed(() => pageItems.value.filter(item => item.disabled).length == pageItems.value.length)
     const allSelected = computed(() => pageItems.value.filter(item => !item.disabled).length == selectedCount.value && pageItems.value.filter(item => !item.disabled).length > 0)
 
-    const selectedItems = computed(() => {
-        return itemsWithUid.value.filter(item => selectState[item[tableUid + '_uid']]).map(item => {
+    const selectedItems = computed<TableItem<T>[]>(() => {
+        return itemsWithUid.value?.filter(item => selectState[item[tableUid + '_uid']]).map(item => {
             const o = {...item}
             if (tableUid + '_uid' in o) delete o[tableUid + '_uid']
             return o
-        })
+        }) as TableItem<T>[]
     })
+
     const toggleSelectItem = (item: any) => {
         if (item.disabled) return
 
@@ -402,7 +339,6 @@ const slots = useSlots() // Used to conditional rendering of the action button s
         provide('toggleSelectAll', toggleSelectAll)
         provide('allSelected', allSelected)
         provide('toggleSelectItem', toggleSelectItem)
-        // provide('itemIsSelected', itemIsSelected)
         provide('deselectAll', deselectAll)
         provide('allDisabled', allDisabled)
         provide('selectState', selectState)
@@ -418,7 +354,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     onBeforeMount(() => {
         props.columns.forEach(column => {
             columns.value.push({
-                //@ts-ignore
+                ...column,
                 caption: column.caption,
                 width: 0,
                 uid: uid(),
@@ -429,10 +365,26 @@ const slots = useSlots() // Used to conditional rendering of the action button s
                 ...(!column.hasOwnProperty('sort')) && {
                     sort: true,
                 },
-                ...column,
-
             })
         })
+
+        // Add Action Buttons column
+        if (useSlots()['cell(row_action_buttons)'])
+        {
+            columns.value.push({
+                uid: uid(),
+                width: 60,
+                caption: 'table_row_action_buttons',
+                cellSlotName: `cell(row_action_buttons)`,
+                headerSlotName: `header(row_action_buttons)`,
+                headerHasSlotContent: false,
+                useExplicitWidth: false,
+                key: 'table_row_action_buttons',
+                sort: false,
+            })
+        }
+
+        // Add Select column
         if (props.selectable)
         {
             columns.value.push({
@@ -448,7 +400,7 @@ const slots = useSlots() // Used to conditional rendering of the action button s
             })
         }
     })
-    const filteredColumns = computed(() => columns.value.filter(column=> column.caption != 'table_select'))
+    const filteredColumns = computed(() => columns.value.filter(column=> column.caption != 'table_select' && column.caption != 'table_row_action_buttons'))
 
     const virtualScroller = ref(null)
     const { height: virtualScrollerHeight } = useElementSize(virtualScroller)
@@ -500,12 +452,6 @@ const slots = useSlots() // Used to conditional rendering of the action button s
     })
     // *******************************************************************
 
-    // onBeforeMount(() => {
-    //     provide('localLogoUrl', props.localLogoUrl)
-    //     provide('columns', props.columns)
-    // })
-
-
 //#endregion
 
 
@@ -543,11 +489,6 @@ const pageItems = computed(() => {
         items = filteredItems.value.slice(start, end)
     }
     else {
-        console.log({
-            e: props.externalPagination,
-            r: props.rowHandling,
-            f: filtered.value
-        })
         if (initialTableMount.value) items = filteredItems.value
         else items = filteredItems.value.slice(0, 10)
     }
@@ -559,12 +500,14 @@ const pageItems = computed(() => {
             let alpha = sortAsc.value ? a : b
             let beta = !sortAsc.value ? a : b
 
-            return typeof deepValue(sortingMetric.value, alpha) == 'number'
-            ? deepValue(sortingMetric.value, alpha) - deepValue(sortingMetric.value, beta)
-            : deepValue(sortingMetric.value, alpha)
-                .toString()
-                .localeCompare(deepValue(sortingMetric.value, beta).toString(), undefined, { numeric: true })
-
+            if (sortingMetric.value !== undefined)
+            {
+                return typeof deepValue(sortingMetric.value, alpha) == 'number'
+                ? parseFloat(deepValue(sortingMetric.value, alpha).toString()) - parseFloat(deepValue(sortingMetric.value, beta).toString())
+                : deepValue(sortingMetric.value, alpha)
+                    .toString()
+                    .localeCompare(deepValue(sortingMetric.value, beta).toString(), undefined, { numeric: true })
+            }
         })
     }
     return items
@@ -687,13 +630,18 @@ watch(props, () => {
                                 :index="index"
                                 :item-count="pageItems.length"
                                 :rows-per-page="rowsPerPage"
-                                :is-last="(index + (props.selectable ? 2 : 1)) == columns.length"
+                                :is-last="(index + 1) == filteredColumns.length"
                                 :dark="props.dark"
                             >
                                 <template #[column.headerSlotName]>
                                     <slot :name="column.headerSlotName" />
                                 </template>
                             </HeaderElements>
+
+                            <th v-if="$slots['cell(row_action_buttons)']"
+                                class="w-[50px] min-w-[50px] max-w-[50px]"
+                                data-th-action-buttons
+                            ></th>
 
                             <HeaderSelectAll v-if="props.selectable"
                                 :page-items="pageItems"
@@ -711,13 +659,15 @@ watch(props, () => {
                         :loading="props.loading"
                         :scroll="scrollable"
                         :external-pagination="Boolean(props.externalPagination)"
+                        :row-action-button-config="props.rowActionButtonConfig"
                         :key="listKey"
                         :dark="props.dark"
                     >
-                        <template v-for="column in filteredColumns" #[column.cellSlotName]="{item}">
+                        <template v-for="column in filteredColumns" #[column.cellSlotName]="{item, index}">
                             <slot
                                 :name="column.cellSlotName"
-                                :item="item"
+                                :item="item as T"
+                                :index="index"
                             />
                         </template>
                     </RowListHandler>
@@ -738,10 +688,11 @@ watch(props, () => {
                     ref="virtualScroller"
                     :key="JSON.stringify(pageItems)"
                 >
-                    <template v-for="column in filteredColumns" #[column.cellSlotName]="{item}">
+                    <template v-for="column in filteredColumns" #[column.cellSlotName]="{item, index}">
                         <slot
                             :name="column.cellSlotName"
-                            :item="item"
+                            :item="item as T"
+                            :index="index"
                         />
                     </template>
                 </VirtualScroller>

@@ -6,9 +6,12 @@ import { type ValidationState } from './InputProps'
 import FasFaCheck from '../../Icons/FasFaCheck.vue'
 import FasCircleExclamation from '../../Icons/FasCircleExclamation.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     validationState: ValidationState,
-}>()
+    dark?: boolean,
+}>(), {
+    dark: false,
+})
 
 </script>
 <template>
@@ -18,6 +21,7 @@ const props = defineProps<{
             {'border border-red-500 px-[6px]': !props.validationState.isValidating && props.validationState.errors.length > 0},
             {'w-[22px]': props.validationState.errors.length == 0}
         ]"
+        :dark="props.dark"
     >
         <template #tooltip>
             <div v-if="props.validationState.errors.length > 0" class="flex flex-col items-start gap-5">

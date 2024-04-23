@@ -28,15 +28,17 @@ defineExpose({
     <DatePicker
         v-model="dirtyStartDate"
         :max-date="dirtyEndDate"
-        label="Start Date"
         :dark="props.dark"
-    />
+    >
+        <template #label>Start Date</template>
+    </DatePicker>
 
     <DatePicker
         v-model="dirtyEndDate"
         :max-date="props.maxDate ? new Date(props.maxDate) : new Date()"
         :min-date="dirtyStartDate"
-        label="End Date"
         :dark="props.dark"
-    />
+    >
+        <template #label>End Date</template>
+    </DatePicker>
 </template>

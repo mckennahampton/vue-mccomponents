@@ -2,7 +2,6 @@
 import { useElementSize } from '@vueuse/core'
 import { type InternalColumn } from '../../Table.vue'
 import { ref, inject, type ComputedRef, watch } from 'vue'
-import TableRowSkeleton from '../../../Skeletons/Table/TableRowSkeleton.vue'
 import { type LengthAwarePaginator } from '../../../Types/Laravel/LengthAwarePaginator'
 
 const props = withDefaults(defineProps<{
@@ -22,6 +21,7 @@ const props = withDefaults(defineProps<{
 const tableConUid = inject('tableConUid') as string
 const tableUid = inject('tableUid') as string
 const updatePageStepDirection = inject('updatePageStepDirection') as Function
+const updateInnerColumnThSize = inject('updateInnerColumnThSize') as Function
 const externalPagination = inject('externalPagination') as false | LengthAwarePaginator
 const tableRef = inject('tableRef') as ComputedRef<HTMLInputElement | null>
 const updateIsTransitioning = inject('updateIsTransitioning') as Function
@@ -30,20 +30,25 @@ const propsScroll = inject('propsScroll') as boolean
 const originalOverflow = ref('')
 const originalWidth = ref('')
 const originalDisplay = ref('')
-const originalTableColumnWidths = ref([] as string[])
-const newTableColumnWidths = ref([] as string[])
-const lastItemAction = ref('' as 'enter' | 'leave' | 'resized')
+const originalTableColumnWidths = ref<ColumnWidth[]>([])
+
+interface ColumnWidth {
+    uid: string | null,
+    width: number,
+}
+const newTableColumnWidths = ref<ColumnWidth[]>([])
+
+const lastItemAction = ref<'enter' | 'leave' | 'resized'>()
 const cycleHasLeavingItems = ref(false)
 
 const { height: tableHeight } = useElementSize(tableRef)
 
-const resizeTimeout = ref({} as NodeJS.Timeout)
-const resizeTableCon = () => {
+const resizeTimeout = ref<NodeJS.Timeout>()
+    const resizeTableCon = () => {
     if (!props.css || propsScroll || props.direction == 'initial') return
 
-    let tableCon = document.querySelector(`#${tableConUid}`)
+    let tableCon = document.querySelector<HTMLElement>(`#${tableConUid}`)
 
-    //@ts-ignore
     if (tableCon) tableCon.style.height = getComputedStyle(tableCon).height
 
     let tfoot = tableRef.value?.querySelector('tfoot')
@@ -52,20 +57,16 @@ const resizeTableCon = () => {
 
     if (props.css && tableCon) {
         requestAnimationFrame(() => {
-            //@ts-ignore
             tableCon.style.transition = `all ${props.durationMs}ms ease-out`
-            //@ts-ignore
             tableCon.style.height = (tableHeight.value + topBorder + bottomBorder) + 'px'
         })
     }
     else
     {
-        //@ts-ignore
         if (tableCon) tableCon.style.height = (tableHeight.value + topBorder + bottomBorder) + 'px'
     }
 
     setTimeout(() => {
-        //@ts-ignore
         if (tableCon) tableCon.style.transition = 'none'
     }, props.durationMs * 1.1)
 }
@@ -81,56 +82,94 @@ watch(tableHeight, () => {
 })
 
 const originalThCaptured = ref(false)
-const resizeThTimeout = ref({} as NodeJS.Timeout)
-const resizeTh = () => {
+const resizeThTimeout = ref<NodeJS.Timeout>()
+const resizeTh = (tempTable?: HTMLTableElement) => {
 
     let tableCon = document.querySelector(`#${tableConUid}`)
 
     newTableColumnWidths.value.length = 0
 
-    // Set the TH's width to auto so the TDs will resize themselves
-    tableCon?.querySelectorAll('thead tr th:not([data-th-select])').forEach(th => {
-        //@ts-ignore
-        th.style.width = 'auto'
-    })
+    if (tempTable)
+    {
+        // Set the TH's width to auto so the TDs will resize themselves
+        tempTable.querySelectorAll<HTMLElement>('thead tr th:not([data-th-select]):not([data-ts-action-buttons])').forEach(th => {
+            th.style.width = 'auto'
+        })
 
-    // Grab the new column widths
-    tableCon?.querySelectorAll('table tbody tr:first-child td:not([data-td-select])').forEach(th => {
-        newTableColumnWidths.value.push(getComputedStyle(th).width)
-    })
+        // Grab the new column widths
+        tempTable.querySelectorAll<HTMLElement>('thead tr th:not([data-th-select]):not([data-ts-action-buttons])').forEach(th => {
+            newTableColumnWidths.value.push({
+                uid: th.getAttribute('data-th'),
+                width: th.offsetWidth
+            })
+        })
+    }
+    
+    else
+    {
+        // Set the TH's width to auto so the TDs will resize themselves
+        tableCon?.querySelectorAll<HTMLElement>('thead tr th:not([data-th-select]):not([data-ts-action-buttons])').forEach(th => {
+            th.style.width = 'auto'
+        })
+
+        // Grab the new column widths
+        tableCon?.querySelectorAll<HTMLElement>('table tbody tr:first-child td:not([data-td-select])').forEach(th => {
+            newTableColumnWidths.value.push({
+                uid: th.getAttribute('data-th'),
+                width: th.offsetWidth
+            })
+        })
+    }
 
     // Manually set the THs to their original width (so we can animate away from it)
-    tableCon?.querySelectorAll('thead tr th:not([data-th-select])').forEach((th, index) => {
-        //@ts-ignore
-        th.style.width = originalTableColumnWidths.value[index]
-    })
-
+    // tableCon?.querySelectorAll<HTMLElement>('thead tr th:not([data-th-select]):not([data-ts-action-buttons])').forEach((th, index) => {
+    //     th.style.width = `${originalTableColumnWidths.value[index]}px`
+    // })
+    
     // Loop through the saved TD widths and animate the TH width change
-    newTableColumnWidths.value.forEach((newWidth, index) => {
-        let th = tableCon?.querySelector(`thead tr th:nth-child(${index + 1})`)
+    newTableColumnWidths.value.forEach((newWidth) => {
+        let th = tableCon?.querySelector<HTMLElement>(`thead tr th[data-th="${newWidth.uid}"]`)
         if (th) {
-
             getComputedStyle(th).width // Force a re-paint so the browser has the accurate width to animate from
 
-            //@ts-ignore
             th.style.transition = `all ${props.durationMs}ms ease-out`
+
             //@ts-ignore
-            th.computedStyleMap.width = getComputedStyle(th).width
-            requestAnimationFrame(() => {
-                //@ts-ignore
-                th.style.width = newWidth
-            })
+            // th.computedStyleMap.width = getComputedStyle(th).width
+
+            let startTime = null as any
+            let width = Math.round(th.offsetWidth)
+            let targetWidth = Math.round(newWidth.width)
+            let duration = props.durationMs / 2
+
+            const updateWidth = (timestamp?: any) => {
+                if (!startTime) startTime = timestamp
+                const elapsedTime = timestamp - startTime
+                
+                // Calculate the new width based on the elapsed time
+                width = Math.min(targetWidth, width + (targetWidth - 100) * (elapsedTime / duration))
+                th.style.width = `${width}px`
+
+                // If the animation is not complete, request another frame
+                if (elapsedTime < duration) {
+                    requestAnimationFrame(updateWidth)
+                }
+            }
+            // Start the animation
+            requestAnimationFrame(updateWidth)
+
+            // requestAnimationFrame(() => {
+            //     th.style.width = newWidth.width
+            // })
         }
     })
 
     // After the animation is over, set the TH widths back to auto
     setTimeout(() => {
-        tableCon?.querySelectorAll('thead tr th:not([data-th-select])').forEach((th, index) => {
-            //@ts-ignore
-            th.style.width = 'auto'
-
-            //@ts-ignore
-            th.style.transition = 'none'
+        tableCon?.querySelectorAll<HTMLElement>('thead tr th:not([data-th-select]):not([data-ts-action-buttons])').forEach((th) => {
+            updateInnerColumnThSize(th.getAttribute('data-th'), parseInt(getComputedStyle(th).width), 10)
+            // th.style.width = 'auto'
+            // th.style.transition = 'none'
         })
     }, props.durationMs * 1.1)
     originalThCaptured.value = false
@@ -140,17 +179,24 @@ const resizeTh = () => {
 const storeOriginalThMeasurements = () => {
     let tableCon = document.querySelector(`#${tableConUid}`)
 
-    if (!originalThCaptured.value) {
+    if (/*!originalThCaptured.value*/ true) {
         originalTableColumnWidths.value.length = 0
         newTableColumnWidths.value.length = 0
 
-        tableCon?.querySelectorAll('thead tr th:not([data-th-select])').forEach(th => {
-            originalTableColumnWidths.value.push(getComputedStyle(th).width)
-            //@ts-ignore
+        tableCon?.querySelectorAll<HTMLElement>('thead tr th:not([data-th-select]):not([data-ts-action-buttons])').forEach(th => {
+            originalTableColumnWidths.value.push({
+                uid: th.getAttribute('data-th'),
+                width: th.offsetWidth
+            })
             th.style.width = getComputedStyle(th).width
-            //@ts-ignore
             th.style.transition = ''
         })
+
+        // tableCon?.querySelectorAll<HTMLElement>('thead tr th:not([data-th-select]):not([data-ts-action-buttons])').forEach(th => {
+        //     originalTableColumnWidths.value.push(th.offsetWidth)
+        //     th.style.width = getComputedStyle(th).width
+        //     th.style.transition = ''
+        // })
 
         updateIsTransitioning(true)
     }
@@ -164,138 +210,113 @@ function onBeforeLeavePage(el: Element) {
     if (props.direction == 'none') return // Exit here for non-page-change changes (i.e. row length changes)
 
     // Animate the incoming list items
-    //@ts-ignore
-    el.style.transition = `all ${props.durationMs}ms ease-out` // Need to set the root element transition to allow the child items time to animate
-    //@ts-ignore
-    // if (externalPagination) el.style.opacity = 0
-    el.querySelectorAll(':scope > *').forEach(_el => {
-        //@ts-ignore
+    (el as HTMLElement).style.transition = `all ${props.durationMs}ms ease-out` // Need to set the root element transition to allow the child items time to animate
+    el.querySelectorAll<HTMLElement>(':scope > *').forEach(_el => {
         _el.style.transition = `all ${props.durationMs}ms ease-out` 
-        //@ts-ignore
         if (props.direction == 'forwards' && /*!externalPagination*/ true) _el.style.animation = `leaveForwards ${props.durationMs}ms`
-        //@ts-ignore
         else if (props.direction == 'backwards' && /*!externalPagination*/ true) _el.style.animation = `leaveBackwards ${props.durationMs}ms`
-        //@ts-ignore
         else _el.style.animation = `leave ${props.durationMs}ms`
-        //@ts-ignore
-        if (props.direction == 'forwards' || props.direction == 'backwards' || externalPagination) _el.style.opacity = 0 // Keeps the outgoing list from blipping back on the page for a moment
+        if (props.direction == 'forwards' || props.direction == 'backwards' || externalPagination) _el.style.opacity = '0' // Keeps the outgoing list from blipping back on the page for a moment
         
     })
 }
 
-function onEnterPage(el: Element, done: Function) {
+function onBeforeEnterPage(el: Element)
+{
     if (!props.css || propsScroll || props.direction == 'initial') return
-
-    const tableCon = document.querySelector(`#${tableConUid}`)
+    const tableCon = document.querySelector<HTMLElement>(`#${tableConUid}`)
 
     // Clone the incoming table and measure that, otherwise we get weird blips on the screen when the table 
     // gets absolutely positioned
 
     const tempTable = document.createElement('table')
-    const tempThead = document.querySelector(`#${tableUid} thead`)?.cloneNode(true) // Add the thead for proper sizing of the columns
-    const clone = el.cloneNode(true)
+    const tempThead = document.querySelector<HTMLElement>(`#${tableUid} thead`)?.cloneNode(true) // Add the thead for proper sizing of the columns
+    const clone = el.cloneNode(true) as HTMLElement
     if (tempThead) tempTable.appendChild(tempThead)
     tempTable.appendChild(clone)
 
     document.body.appendChild(tempTable)
     // Animate parent container height change
 
-    //@ts-ignore
     tempTable.style.position = 'absolute'
-    //@ts-ignore
-    tempTable.style.width = document.querySelector(`#${tableUid}`).offsetWidth
+    let realTable = document.querySelector(`#${tableUid}`)
+    if (realTable) tempTable.style.width = getComputedStyle(realTable).width
 
-    //@ts-ignore
     clone.style.width = originalWidth.value
-    //@ts-ignore
     clone.style.visibility = 'hidden'
-    //@ts-ignore
     clone.style.height = 'auto'
 
-    //@ts-ignore
-    const newTableHeight = getComputedStyle(clone).height
-    document.body.removeChild(tempTable)
+    const newTableHeight = getComputedStyle(clone).height;
 
-    //@ts-ignore
-    el.style.width = null
-    //@ts-ignore
-    el.style.position = null
-    //@ts-ignore
-    el.style.visibility = null
-    //@ts-ignore
-    el.style.height = newTableHeight
+    (el as HTMLElement).style.width = '';
+    (el as HTMLElement).style.position = '';
+    (el as HTMLElement).style.visibility = '';
+    (el as HTMLElement).style.height = newTableHeight
 
 
     // Force repaint to make sure the
     // animation is triggered correctly.
     getComputedStyle(el).height
 
-    //@ts-ignore
-    if (props.direction != 'none') el.style.transition = `all ${props.durationMs}ms ease-out`
-    //@ts-ignore
-    tableCon.style.transition = `all ${props.durationMs}ms ease-out`
+    if (props.direction != 'none') (el as HTMLElement).style.transition = `all ${props.durationMs}ms ease-out`
+    if (tableCon) tableCon.style.transition = `all ${props.durationMs}ms ease-out`
 
-    if (!props.loading) {
-        resizeTh()
-    }
+    if (!props.loading) resizeTh(tempTable)
+    document.body.removeChild(tempTable)
+}
+
+function onEnterPage(el: Element, done: Function) {
+    if (!props.css || propsScroll || props.direction == 'initial') return
 
     el.querySelectorAll(':scope > *').forEach(_el => {
-        //@ts-ignore
-        if (props.direction == 'forwards' && /*!externalPagination*/ true) _el.style.animation = `enterForwards ${props.durationMs}ms`
-        //@ts-ignore
-        else if (props.direction == 'backwards' && /*!externalPagination*/ true) _el.style.animation = `enterBackwards ${props.durationMs}ms`
-        //@ts-ignore
-        else _el.style.animation = `enter ${props.durationMs}ms`
+        if (props.direction == 'forwards' && /*!externalPagination*/ true) (_el as HTMLElement).style.animation = `enterForwards ${props.durationMs}ms`
+        else if (props.direction == 'backwards' && /*!externalPagination*/ true) (_el as HTMLElement).style.animation = `enterBackwards ${props.durationMs}ms`
+        else (_el as HTMLElement).style.animation = `enter ${props.durationMs}ms`
     })
 
     setTimeout(() => {
-        el.querySelectorAll(':scope > *').forEach(_el => {
-            //@ts-ignore
+        el.querySelectorAll<HTMLElement>(':scope > *').forEach(_el => {
             _el.style.animation = ''
         })
 
-        //@ts-ignore
         if (el.parentElement)
         {
-            el.parentElement.style.overflow = originalOverflow.value
-            //@ts-ignore
-            el.style.display = originalDisplay.value
-            //@ts-ignore
-            el.style.height = 'auto'
+            el.parentElement.style.overflow = originalOverflow.value;
+            (el as HTMLElement).style.display = originalDisplay.value;
+            (el as HTMLElement).style.height = 'auto'
         }
 
         updatePageStepDirection('none')
 
-        tableCon?.querySelectorAll(`thead tr th`).forEach(th => {
-            //@ts-ignore
+        const tableCon = document.querySelector<HTMLElement>(`#${tableConUid}`)
+        tableCon?.querySelectorAll<HTMLElement>(`thead tr th`).forEach(th => {
             th.style.transition = ''
         })
 
         resizeTableCon()
 
-    }, props.durationMs)
+        updateIsTransitioning(false)
+        done()
 
-    updateIsTransitioning(false)
-    done()
+    }, props.durationMs)
 }
 
 
 //#region Transition Rows
-function onBeforeLeaveItem(el: Element) {
+function onBeforeLeaveItem() {
     if (!props.css || propsScroll || props.direction == 'initial') return
+
     storeOriginalThMeasurements()
 }
 
 function onLeaveItem(el: Element, done: Function) {
     if (!props.css || propsScroll || props.direction == 'initial') return
     lastItemAction.value = 'leave'
-    cycleHasLeavingItems.value = true
+    cycleHasLeavingItems.value = true;
 
     // Animate the incoming list items
-    //@ts-ignore
-    el.style.transition = `all ${props.durationMs}ms ease-out` // Need to set the root element transition to allow the child items time to animate
-    //@ts-ignore
-    el.style.animation = `itemLeave ${props.durationMs}ms`
+    (el as HTMLElement).style.transition = `all ${props.durationMs}ms ease-out`; // Need to set the root element transition to allow the child items time to animate
+    (el as HTMLElement).style.animation = `itemLeave ${props.durationMs}ms`
 
     // Debounce resizeTh
     if (resizeThTimeout.value) clearTimeout(resizeThTimeout.value)
@@ -309,39 +330,39 @@ function onLeaveItem(el: Element, done: Function) {
     }, props.durationMs)
 }
 
-function onBeforeEnterItem(el:Element) {
-updateIsTransitioning(true)
-if (!props.css || propsScroll || props.direction == 'initial') return
+function onBeforeEnterItem() {
+    updateIsTransitioning(true)
+    if (!props.css || propsScroll || props.direction == 'initial') return
 
-storeOriginalThMeasurements()
+    storeOriginalThMeasurements()
 }
 
 function onEnterItem(el: Element, done: Function) {
-if (!props.css || propsScroll || props.direction == 'initial') return
+    if (!props.css || propsScroll || props.direction == 'initial') return
 
-    //@ts-ignore
-    el.style.transition = `all ${props.durationMs}ms ease-out` // Need to set the root element transition to allow the child items time to animate
-
-    //@ts-ignore
-    el.style.animation = `itemEnter ${props.durationMs}ms`
-    if (cycleHasLeavingItems.value) {
         //@ts-ignore
-        el.style.transitionDelay = props.durationMs + 'ms'
-    }
+        el.style.transition = `all ${props.durationMs}ms ease-out` // Need to set the root element transition to allow the child items time to animate
 
-    // Debounce resizeTh
-    if (resizeThTimeout.value) clearTimeout(resizeThTimeout.value)
-    resizeThTimeout.value = setTimeout(() => {
-        resizeTh()
-    }, props.durationMs * 1.1)
+        //@ts-ignore
+        el.style.animation = `itemEnter ${props.durationMs}ms`
+        if (cycleHasLeavingItems.value) {
+            //@ts-ignore
+            el.style.transitionDelay = props.durationMs + 'ms'
+        }
 
-    lastItemAction.value = 'enter'
+        // Debounce resizeTh
+        if (resizeThTimeout.value) clearTimeout(resizeThTimeout.value)
+        resizeThTimeout.value = setTimeout(() => {
+            resizeTh()
+        }, props.durationMs * 1.1)
 
-    setTimeout(() => {
-        el.removeAttribute('style') // Removes any lingering inline styles that might interfrere with sorting
-        updateIsTransitioning(false)
-        done()
-    }, props.durationMs * 1.1)
+        lastItemAction.value = 'enter'
+
+        setTimeout(() => {
+            el.removeAttribute('style') // Removes any lingering inline styles that might interfrere with sorting
+            updateIsTransitioning(false)
+            done()
+        }, props.durationMs * 1.1)
 
 }
 //#endregion
@@ -351,6 +372,7 @@ if (!props.css || propsScroll || props.direction == 'initial') return
         name="page"
         mode="out-in"
         @before-leave="onBeforeLeavePage"
+        @before-enter="onBeforeEnterPage"
         @enter="onEnterPage"
     >
         <TransitionGroup

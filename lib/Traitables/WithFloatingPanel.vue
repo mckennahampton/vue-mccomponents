@@ -231,7 +231,6 @@ const emit = defineEmits(['opened', 'closed'])
     }
 
     const closeOnOutsideClick = (e: MouseEvent) => {
-        console.log('outside click')
         let insideScrollbar = false
         if ((e.target as HTMLElement)?.closest('[data-panel-content="'+parentUid+'"]')) {
             if (panel.value)
@@ -391,11 +390,11 @@ const emit = defineEmits(['opened', 'closed'])
                         :id="props.panelId"
                         ref="panel"
                         :data-panel-content="`${parentUid}_${props.instanceType}`"
-                        class="absolute z-30 flex flex-col items-stretch text-sm shadow-xl scroll-y"
+                        class="absolute z-30 flex flex-col items-stretch text-sm shadow-xl scroll-y border"
                         :class="[
                             props.panelClasses,
-                            {'bg-black text-white': props.dark},
-                            {'bg-white text-black': !props.dark}
+                            {'bg-black text-white border-neutral-800': props.dark},
+                            {'bg-white text-black border-neutral-300': !props.dark}
                         ]"
                         :style="{
                             top: panelTop + 'px',

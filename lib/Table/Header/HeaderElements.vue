@@ -66,11 +66,13 @@ const sort = (metric: string) => {
             <!-- Header caption -->
             <span class="select-none relative">
 
+                <!-- UI Caption / Slot -->
                 <slot v-if="props.column.headerHasSlotContent" :name="props.column.headerSlotName" />
                 <template v-else>
                     {{ props.column.caption }}
                 </template>
 
+                <!-- Sorting Icon -->
                 <TransitionFade>
                     <span v-if="sorting && sortingMetric == props.column.key"
                         class="absolute top-[50%] transform -translate-y-[50%] -right-[20px]"

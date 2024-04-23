@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core'
 import { type InternalColumn } from '../Table.vue'
 import FarCircleCheck from '../../Icons/FarCircleCheck.vue'
 import FasCircleCheck from '../../Icons/FasCircleCheck.vue'
-import { inject, type ComputedRef, ref, onMounted } from 'vue'
-
+import { inject, type ComputedRef } from 'vue'
 
 interface Props {
     pageItems: any[],
@@ -16,8 +14,6 @@ const props = defineProps<Props>()
 const toggleSelectAll = inject('toggleSelectAll') as (payload: MouseEvent) => void
 const allSelected = inject('allSelected') as ComputedRef
 const allDisabled = inject('allDisabled') as ComputedRef
-
-const thRef = ref(null)
 
 </script>
 <template>

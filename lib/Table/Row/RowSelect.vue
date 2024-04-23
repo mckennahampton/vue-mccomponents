@@ -1,19 +1,19 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T">
 import { inject } from 'vue'
-import { type SelectState } from '../Table.vue'
+import { type SelectState, ItemWithUid } from '../TableTypes'
 import FarCircleCheck from '../../Icons/FarCircleCheck.vue'
 import FasCircleCheck from '../../Icons/FasCircleCheck.vue'
 import PrimaryButton from '../../Buttons/PrimaryButton.vue'
 
-interface Props {
-    item: any,
+interface Props<T> {
+    item: ItemWithUid<T>,
     itemCount: number,
     scroll: boolean,
     dark: boolean,
 }
-const props = defineProps<Props>()
+const props = defineProps<Props<T>>()
 
-const toggleSelectItem = inject('toggleSelectItem') as (payload: MouseEvent) => void
+const toggleSelectItem = inject('toggleSelectItem') as (item: ItemWithUid<T>) => void
 const selectState = inject('selectState') as SelectState
 const tableUid = inject('tableUid') as string
 
@@ -32,14 +32,14 @@ const tableUid = inject('tableUid') as string
         <!-- Mobile -->
         <PrimaryButton
             class="w-full block md:hidden"
-            :class="[{'bg-neutral-500': selectState[item[tableUid + '_uid']]}]"
+            :class="[{'bg-neutral-500': selectState[props.item[tableUid + '_uid']]}]"
         >
-            {{  selectState[item[tableUid + '_uid']] ? 'Unselect' : 'Select' }}
+            {{  selectState[props.item[tableUid + '_uid']] ? 'Unselect' : 'Select' }}
         </PrimaryButton>
 
         <!-- Desktop -->
         <div class="hidden md:flex items-center justify-center">
-            <FasCircleCheck v-if="selectState[item[tableUid + '_uid']]"
+            <FasCircleCheck v-if="selectState[props.item[tableUid + '_uid']]"
                 :class="[dark ? 'fill-white' : 'fill-black']"
             />
             <FarCircleCheck v-else

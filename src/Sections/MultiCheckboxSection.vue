@@ -27,20 +27,15 @@ const tooltippedModel = ref([])
 const requiredModel = ref([])
 const optionalModel = ref([])
 const errorsModel = ref([])
-const validations = computed(() => [
-    {
-        message: 'Required',
-        errored: errorsModel.value.length == 0
-    },
-    {
-        message: 'Cannot select more than 2',
-        errored: errorsModel.value.length > 2,
-    },
-    {
-        message: 'Cannot select 1 & 3 together',
-        errored: Boolean(errorsModel.value.find(item => item == 3) && errorsModel.value.find(item => item == 1))
-    },
-])
+
+const validations = computed(() => ({
+    errors: [
+        ... errorsModel.value.length == 0 ? ['Required'] : [],
+        ... errorsModel.value.length > 2 ? ['Cannot select more than 2'] : [],
+        ... Boolean(errorsModel.value.find(item => item == 3) && errorsModel.value.find(item => item == 1))
+            ? ['Cannot select 1 & 3 together'] : []
+    ]
+}))
 
 </script>
 <template>
@@ -54,9 +49,12 @@ const validations = computed(() => [
                 <MultiCheckbox
                     :items="baseItems"
                     v-model="simpleModel"
-                    label="Simple Multi-Checkbox"
                     :dark="props.dark"
-                />
+                >
+                    <template #label>
+                        Simple Multi-Checkbox
+                    </template>
+                </MultiCheckbox>
                 {{ simpleModel }}
             </div>
 
@@ -65,9 +63,10 @@ const validations = computed(() => [
                 <MultiCheckbox
                     :items="baseItems"
                     v-model="preSelectedModel"
-                    label="Pre-selected"
                     :dark="props.dark"
-                />
+                >
+                    <template #label>Pre-selected</template>
+                </MultiCheckbox>
                 {{ preSelectedModel }}
             </div>
 
@@ -76,10 +75,11 @@ const validations = computed(() => [
                 <MultiCheckbox
                     :items="baseItems"
                     v-model="verticalModel"
-                    label="Vertical"
                     :dark="props.dark"
                     vertical
-                />
+                >
+                    <template #label>Vertical</template>
+                </MultiCheckbox>
                 {{ verticalModel }}
             </div>
 
@@ -88,9 +88,9 @@ const validations = computed(() => [
                 <MultiCheckbox
                     :items="baseItems"
                     v-model="tooltippedModel"
-                    label="Tooltipped"
                     :dark="props.dark"
                 >
+                    <template #label>Tooltipped</template>
                     <template #tooltipHeader>
                         Hello There
                     </template>
@@ -108,13 +108,14 @@ const validations = computed(() => [
                     v-model="requiredModel"
                     label="Required"
                     :dark="props.dark"
-                    :validations="[
-                        {
-                            message: 'Required',
-                            errored: requiredModel.length == 0
-                        }
-                    ]"
-                />
+                    :validation-state="{
+                        errors: [
+                            ... !Boolean(requiredModel.length) ? ['Required'] : []
+                        ]
+                    }"
+                >
+                    <template #label>Required</template>
+                </MultiCheckbox>
                 {{ requiredModel }}
             </div>
 
@@ -123,10 +124,11 @@ const validations = computed(() => [
                 <MultiCheckbox
                     :items="baseItems"
                     v-model="errorsModel" 
-                    label="With Errors"
                     :dark="props.dark"
-                    :validations="validations"
-                />
+                    :validation-state="validations"
+                >
+                    <template #label>With Errors</template>
+                </MultiCheckbox>
                 {{ errorsModel }}
             </div>
 
@@ -135,10 +137,11 @@ const validations = computed(() => [
                 <MultiCheckbox
                     :items="baseItems"
                     v-model="optionalModel" 
-                    label="Optional"
                     :dark="props.dark"
                     optional
-                />
+                >
+                    <template #label>Optional</template>
+                </MultiCheckbox>
                 {{ optionalModel }}
             </div>
 

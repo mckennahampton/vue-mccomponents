@@ -138,8 +138,11 @@ defineExpose({
         @update:model-value="val => filterSelected(filter.metric, val)"
         :searchable="filter.searchable"
         ref="filterRefs"
-        :label="filter.label ?? filter.metric"
         label-styles="capitalize"
         :dark="props.dark"
-    />
+    >
+        <template #label>
+            {{ filter.label ?? filter.metric }}
+        </template>
+    </Select>
 </template>

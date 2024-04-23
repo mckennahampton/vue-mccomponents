@@ -94,6 +94,7 @@ defineExpose({
                 <!-- Validations -->
                 <Validations v-if="props.validationState"
                     :validation-state="props.validationState"
+                    :dark="props.dark"
                 />
 
             </div>

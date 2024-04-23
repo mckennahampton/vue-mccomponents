@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject } from 'vue'
-import { type InternalColumn } from '../Table.vue'
+import { type InternalColumn } from '../TableTypes'
 import FasFileCsv from '../../Icons/FasFileCsv.vue'
 import MutedButton from '../../Buttons/MutedButton.vue'
 import { deepValue } from '../../Utilities/objectHelpers'
@@ -27,7 +27,7 @@ const exportToCsv = () => {
     let now = new Date
     let dateString = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}_${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`
 
-    const rows = document.querySelectorAll(`[data-row]`)
+    // const rows = document.querySelectorAll(`[data-row]`)
     const header = document.querySelector(`#${tableUid} thead`)
     let csvRows = []
 

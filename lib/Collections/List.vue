@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<Props>(), {
             <span v-if="props.header" :class="props.headerClasses">{{ props.header }}</span>
             <slot name="headerRight" />
         </div>
-        <div :class="[listClasses, {'max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent': props.scroll}]" class="flex flex-col w-full">
+        <div :class="[listClasses, {'max-h-[200px] scroll-y': props.scroll}]" class="flex flex-col w-full">
             <slot />
         </div>
     </div>

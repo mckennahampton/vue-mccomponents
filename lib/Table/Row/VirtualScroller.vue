@@ -1,14 +1,19 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T">
 import { inject, computed } from 'vue'
 import RowElement from './RowElement.vue'
-import { type InternalColumn} from '../Table.vue'
+import {
+    type ItemWithUid,
+    type InternalColumn,
+    type RowActionButtonConfig
+} from '../TableTypes'
+
 
 //@ts-ignore
 import { RecycleScroller } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
-interface Props {
-    items: any[],
+interface Props<T> {
+    items: ItemWithUid<T>[],
     columns: InternalColumn[],
     rowClasses?: string | object | any[],
     loading: boolean,
@@ -18,13 +23,14 @@ interface Props {
     itemUid?: string,
     scrollableMaxHeight?: number,
     dark: boolean,
+    rowActionButtonConfig?: RowActionButtonConfig
 }
-const props = defineProps<Props>()
+const props = defineProps<Props<T>>()
 
 const selectable = inject('selectable') as boolean
 const tableUid = inject('tableUid') as string
 
-const filteredColumns = computed(() => props.columns.filter(column => column.caption != 'table_select'))
+const filteredColumns = computed(() => props.columns.filter(column => column.caption != 'table_select' && column.key !== 'table_row_action_buttons'))
 
 </script>
 <template>
@@ -39,12 +45,11 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
             })
         }"
         :key-field="props.itemUid ?? tableUid + '_uid'"
-        v-slot="{ item, index }"
         :buffer="props.pageMode ? 1500 : 200"
         :page-mode="props.pageMode"
     >
-
-        <RowElement
+        <template v-slot="{ item, index }: {item: ItemWithUid<T>, index: any}">
+            <RowElement
             :item="item"
             :index="index"
             :columns="props.columns"
@@ -54,15 +59,17 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
             :dark="props.dark"
             :scroll="props.scroll"
             :key="item[props.itemUid ?? tableUid + '_uid']"
+            :row-action-button-config="props.rowActionButtonConfig"
         >
             <template v-for="column in filteredColumns" #[column.cellSlotName]="{item}">
                 <slot
                     :name="column.cellSlotName"
                     :item="item"
+                    :index="index as number"
                 />
             </template>
         </RowElement>
-
+        </template>
     </RecycleScroller>
     
 </template>
@@ -86,7 +93,7 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
 }
 
 .virtual-scroller {
-    @apply w-full h-full overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-400 scrollbar-track-transparent
+    @apply w-full h-full scroll-y
 }
 
 table {
