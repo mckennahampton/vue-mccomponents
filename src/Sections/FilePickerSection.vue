@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import FilePicker from '../../lib/Inputs/FilePicker.vue'
 
 const props = defineProps<{
@@ -7,14 +7,6 @@ const props = defineProps<{
 }>()
 
 const simpleModel = ref<File[]>([])
-
-
-const requiredValidation = computed(() => [
-    {
-        message: 'Required',
-        errored: false
-    }
-])
 
 </script>
 <template>

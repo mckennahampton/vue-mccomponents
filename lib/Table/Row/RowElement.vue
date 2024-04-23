@@ -105,13 +105,10 @@ watch(rowHeight, ()=> {
 
         <!-- Overlay for disabled items -->
         <Tooltip v-if="props.item.disabled"
+            class="!absolute w-full h-full left-0 top-0"
             position="center"
-            manual-ref
         >
             <template #tooltip>{{ props.item.tooltipBody ?? 'Item is disabled' }}</template>
-            <template v-slot="{setRef}">
-                <span class="!absolute w-full h-full left-0 top-0" :ref="r=>setRef(r)"></span>
-            </template>
         </Tooltip>
 
     </component>

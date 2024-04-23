@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { inject } from 'vue'
 import { jsPDF } from 'jspdf'
-import { type Column } from '../Table.vue'
 import * as autoTable from 'jspdf-autotable'
 import FasFilePdf from '../../Icons/FasFilePdf.vue'
 import { toBase64 } from '../../Utilities/fileHelpers'

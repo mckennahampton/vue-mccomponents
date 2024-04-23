@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core'
-import { type InternalColumn } from '../../Table.vue'
+import { type InternalColumn } from '../../TableTypes'
 import { ref, inject, type ComputedRef, watch } from 'vue'
 import { type LengthAwarePaginator } from '../../../Types/Laravel/LengthAwarePaginator'
 

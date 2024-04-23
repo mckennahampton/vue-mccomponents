@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type InternalColumn } from '../Table.vue'
+import { type InternalColumn } from '../TableTypes'
 import FarCircleCheck from '../../Icons/FarCircleCheck.vue'
 import FasCircleCheck from '../../Icons/FasCircleCheck.vue'
 import { inject, type ComputedRef } from 'vue'

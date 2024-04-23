@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type InternalColumn } from '../Table.vue'
+import { type InternalColumn } from '../TableTypes'
 
 const props = defineProps<{
     column: InternalColumn

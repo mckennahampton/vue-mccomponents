@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core'
 import HeaderResizer from './HeaderResizer.vue'
-import { type InternalColumn } from '../Table.vue'
+import { type InternalColumn } from '../TableTypes'
 import { ref, onMounted, inject, type ComputedRef } from 'vue'
 import TransitionFade from '../../Transitions/TransitionFade.vue'
 import FasArrowUpWideShort from '../../Icons/FasArrowUpWideShort.vue'

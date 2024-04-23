@@ -55,20 +55,9 @@ extended = extended.concat(items)
 extended = extended.concat(items)
 extended = extended.concat(items)
 extended = extended.concat(items)
-console.log(extended)
+// console.log(extended)
 
 const tableRef = ref(null)
-
-const isDark = ref(true)
-const toggleDark = () => {
-    isDark.value = !isDark.value
-    if (isDark.value) {
-        document.querySelector('html')?.classList.add('dark')
-    }
-    else {
-        document.querySelector('html')?.classList.remove('dark')
-    }
-}
 
 onBeforeMount(() => {
     document.querySelector('html')?.classList.add('dark')
