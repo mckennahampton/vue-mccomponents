@@ -1,6 +1,6 @@
 {
   "name": "vue-mccomponents",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "main": "lib/main.ts",
   "sideEffects": [
@@ -16,6 +16,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.5.2",
+    "@fortawesome/free-brands-svg-icons": "^6.5.2",
+    "@fortawesome/free-regular-svg-icons": "^6.5.2",
+    "@fortawesome/free-solid-svg-icons": "^6.5.2",
+    "@fortawesome/vue-fontawesome": "^3.0.6",
     "@vuepic/vue-datepicker": "^8.0.0",
     "@vueuse/core": "^10.6.1",
     "jspdf": "^2.5.1",

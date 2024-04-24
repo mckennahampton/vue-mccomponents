@@ -1,0 +1,1 @@
+export type Extension = 'pdf' | 'jpeg' | 'jpg' | 'jfif' | 'png' | 'webp' | 'xlsx' | 'docx' | 'mov' | 'mp4' | 'zip' | '7z' | 'mp3' | 'wav' | 'html' | 'csv'

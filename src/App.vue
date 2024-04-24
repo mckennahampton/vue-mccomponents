@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Icon from '../lib/Icon.vue'
 import { ref, onBeforeMount } from 'vue'
 import TableSection from './Sections/TableSection.vue'
 import InputSection from './Sections/InputSection.vue'
@@ -26,6 +27,7 @@ onBeforeMount(() => {
     <div class="w-full h-full flex flex-col gap-20 items-center justify-start text-black dark:text-white p-10">
         <div class="w-full self-start">
             <div class="p-4 m-3" @click="toggleDark">Toggle Dark</div>
+            <Icon icon-class="fas fa-chevron-left" />
         </div>
 
         <InputSection :dark="isDark" />

@@ -14,11 +14,15 @@ import TableSkeleton from './Skeletons/Table/TableSkeleton.vue'
 
 import Table from './Table/Table.vue'
 
+import WithFloatingPanel from './Traitables/WithFloatingPanel.vue'
+
 import TransitionExpand from './Transitions/TransitionExpand.vue'
 import TransitionFade from './Transitions/TransitionFade.vue'
 import TransitionSlideUp from './Transitions/TransitionSlideUp.vue'
 
 import Tooltip from './Tooltip.vue'
+
+import Icon from './Icon.vue'
 
 import { timestampToISO, timestampToLocaleTime, timestampToLocaleDate, timeDiff } from './Utilities/dateHelpers'
 import download from './Utilities/download'
@@ -29,8 +33,32 @@ import uid from './Utilities/uid'
 import { toBase64 } from './Utilities/fileHelpers'
 
 export {
-    Accordion, AccordionItem, DropdownButton, DropdownItem,
-    PrimaryButton, MutedButton, Select, TableSkeleton, Table, TransitionExpand, TransitionFade, TransitionSlideUp,
-    Tooltip, timestampToISO, timestampToLocaleDate, timestampToLocaleTime, timeDiff, download, formatBytes,
-    formatUSD, numberFriendlyFormat, deepValue, camelCase, slugify, uid, toBase64
+    Accordion,
+    AccordionItem,
+    DropdownButton,
+    DropdownItem,
+    Icon,
+    PrimaryButton,
+    MutedButton,
+    Select,
+    TableSkeleton,
+    Table,
+    TransitionExpand,
+    TransitionFade,
+    TransitionSlideUp,
+    Tooltip,
+    WithFloatingPanel,
+    timestampToISO,
+    timestampToLocaleDate,
+    timestampToLocaleTime,
+    timeDiff,
+    download,
+    formatBytes,
+    formatUSD,
+    numberFriendlyFormat,
+    deepValue,
+    camelCase,
+    slugify,
+    uid,
+    toBase64
 }
