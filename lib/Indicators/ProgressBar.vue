@@ -29,9 +29,9 @@ const slots = useSlots()
         <div class="flex gap-1 items-start justify-center">
             <!-- Progress Bar -->
             <div class="w-full flex flex-col">
-                <div class="relative overflow-hidden h-2 text-xs flex bg-locke-red-200 w-full">
+                <div class="relative overflow-hidden h-2 text-xs flex bg-red-200 w-full">
                     <div
-                        class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-locke-red-500 transition-all"
+                        class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500 transition-all"
                         :style="{ width: props.progression + '%' }"
                     ></div>
                 </div>

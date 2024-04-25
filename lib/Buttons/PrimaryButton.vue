@@ -24,7 +24,7 @@ const element = computed(() => {
     <component
         :is="element"
         :href="props.href"
-        class="flex items-center gap-3 bg-locke-red-500 hover:cursor-pointer text-white py-2 px-4 whitespace-nowrap"
+        class="flex items-center gap-3 bg-red-500 hover:cursor-pointer text-white py-2 px-4 whitespace-nowrap"
     >
         <div class="w-full flex" :class="[
             {'flex-col': !Boolean(props.iconClass)},

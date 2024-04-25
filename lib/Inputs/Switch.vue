@@ -147,12 +147,12 @@ const labelComponentRef = ref<InstanceType<typeof GlobalLabel> | null>(null)
     after:shadow-[0_3px_5px_2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)]
     
     /* :checked */
-    checked:bg-locke-red-600
+    checked:bg-red-600
 
     /* :checked:after - round knob*/
     checked:after:-mt-[3px] 
-    checked:after:bg-locke-red-500
-    checked:after:border-locke-red-800
+    checked:after:bg-red-500
+    checked:after:border-red-800
     checked:after:transition-[background-color_0.2s,transform_0.2s]
     checked:after:left-[15px]
     
