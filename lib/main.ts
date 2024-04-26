@@ -22,6 +22,7 @@ import LeftEllipse from './Displays/LeftEllipse.vue'
 import HorizontalIndicator from './Indicators/HorizontalIndicator.vue'
 import HorizontalLoadingBar from './Indicators/HorizontalLoadingBar.vue'
 import ProgressBar from './Indicators/ProgressBar.vue'
+import TypingIndicator from './Indicators/TypingIndicator.vue'
 
 // Inputs
 import Checkbox from './Inputs/Checkbox.vue'
@@ -89,6 +90,7 @@ export {
     HorizontalIndicator,
     HorizontalLoadingBar,
     ProgressBar,
+    TypingIndicator,
 
     // Inputs
     Checkbox,
