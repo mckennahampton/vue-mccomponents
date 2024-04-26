@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeMount } from 'vue'
-import { Extension } from './Types/Extensions'
-import { camelCase } from './Utilities/stringHelpers'
+import { Extension } from '../Types/Extensions'
+import { camelCase } from '../Utilities/stringHelpers'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import * as solidIcons from '@fortawesome/free-solid-svg-icons'

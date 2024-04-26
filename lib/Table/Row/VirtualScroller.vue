@@ -38,7 +38,7 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
         :items="props.items"
         :item-size="props.rowHeight"
         item-class="flex items-center justify-center"
-        class="virtual-scroller"
+        class="w-full h-full scroll-y"
         :style="{
             ...(!props.pageMode && {
                 maxHeight: `${props.scrollableMaxHeight ?? 500}px`
@@ -90,10 +90,6 @@ const filteredColumns = computed(() => props.columns.filter(column => column.cap
     image-rendering: -webkit-optimize-contrast; /* Chrome (and Safari) */
     image-rendering: optimize-contrast;         /* CSS3 Proposed       */
     -ms-interpolation-mode: nearest-neighbor;   /* IE8+                */
-}
-
-.virtual-scroller {
-    @apply w-full h-full scroll-y
 }
 
 table {

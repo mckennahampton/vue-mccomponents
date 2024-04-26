@@ -482,7 +482,7 @@ const pageItems = computed(() => {
     // If items need to be paginated, "fetch" only the current page's items
     // If we are using external pagination, then the provided items are already
     // chunked to the page size, so we don't need to do anything
-    if (!props.externalPagination && props.rowHandling == 'paginate' && !filtered.value)
+    if (!props.externalPagination && props.rowHandling == 'paginate')
     {
         let start = (currentPage.value - 1) * rowsPerPage.value
         let end = start + rowsPerPage.value

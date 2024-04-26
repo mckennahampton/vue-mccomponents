@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import uid from '../Utilities/uid'
-import { type Validation } from './Validations.vue'
 import GlobalLabel from './Partials/GlobalLabel.vue'
 import { ref, watch, computed, onMounted } from 'vue'
 import DropdownItem from '../Buttons/DropdownItem.vue'
 import { type ValidationState } from './Partials/InputProps'
+import TransitionFade from '../Transitions/TransitionFade.vue'
+import TypingIndicator from '../Indicators/TypingIndicator.vue'
 import WithFloatingPanel, { type Placement } from '../Traitables/WithFloatingPanel.vue'
 
 export interface Search {
@@ -24,12 +25,12 @@ const props = withDefaults(defineProps<{
     ignoreValidation?: boolean,
     renderLabel?: boolean,
     dark?: boolean,
-    validations?: Validation[],
     search?: Search,
     autocomplete?: boolean,
     optional?: boolean,
     readonly?: boolean,
     validationState?: ValidationState,
+    debounce?: boolean,
 }>(), {
     showValidated: false,
     format: 'string',
@@ -39,6 +40,7 @@ const props = withDefaults(defineProps<{
     dark: false,
     optional: false,
     readonly: false,
+    debounce: false
 })
 
 const validNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
@@ -57,7 +59,20 @@ const validate = (e: KeyboardEvent) => {
 
 const emptyClass = computed(() => inputValue.value ? 'not-empty' : 'empty')
 
-watch(inputValue, () => emit('update:modelValue', inputValue.value))
+const updateTimeout = ref<NodeJS.Timeout>()
+const timeoutRunning = ref(false)
+watch(inputValue, () => {
+    if (props.debounce && Boolean(inputValue.value))
+    {
+        timeoutRunning.value = true
+        if (updateTimeout.value) clearTimeout(updateTimeout.value)
+        updateTimeout.value = setTimeout(() => {
+            timeoutRunning.value = false
+            emit('update:modelValue', inputValue.value ?? '')
+        }, 500)
+    }
+    else emit('update:modelValue', inputValue.value ?? '')
+})
 
 watch(props, () => {
     if(props.modelValue) inputValue.value = props.modelValue
@@ -128,7 +143,7 @@ const clear = () => {
         </GlobalLabel>
 
         <WithFloatingPanel
-            class="!w-full"
+            class="!w-full relative"
             :show-icon="false"
             :offset="props.search?.offset ?? 0"
             :functional="Boolean(props.search)"
@@ -156,6 +171,10 @@ const clear = () => {
                     :readonly="props.readonly"
                     ref="input"
                 />
+                
+                <TransitionFade>
+                    <TypingIndicator v-if="timeoutRunning" class="absolute top-[50%] transform -translate-y-[50%] right-5" />
+                </TransitionFade>
             </template>
             <template v-if="props.search && filteredItems" #panel>
                 <DropdownItem v-for="item in filteredItems" @click="selected(item)" :dark="props.dark">

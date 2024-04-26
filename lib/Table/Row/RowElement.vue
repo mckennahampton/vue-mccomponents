@@ -2,7 +2,7 @@
 import Cell from './Cell.vue'
 import uid from '../../Utilities/uid'
 import RowSelect from './RowSelect.vue'
-import Tooltip from '../../Tooltip.vue'
+import Tooltip from '../../Misc/Tooltip.vue'
 import { useElementSize } from '@vueuse/core'
 import RowActionButtons from './RowActionButtons.vue'
 import { inject, ref, type ComputedRef, watch } from 'vue'

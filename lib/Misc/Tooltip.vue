@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import WithFloatingPanel, { type Placement, type Trigger } from './Traitables/WithFloatingPanel.vue'
+import WithFloatingPanel, { type Placement, type Trigger } from '../Traitables/WithFloatingPanel.vue'
 
 interface Props {
     placement?: Placement,

@@ -46,11 +46,8 @@ watch(() => props.items, (newParams, oldParams) => {
     if (!newParams.every(item => oldParams.includes(item))) pageUid.value = uid()
 })
 
-const listKey = computed(() => {
-    return filtered.value
-    ? props.items.toString()
-    : (props.items.length > 0 ? 1 : 0) + rowsPerPage.value
-})
+const listKey = computed(() => (props.items.length > 0 ? 1 : 0) + rowsPerPage.value)
+
 </script>
 <template>
     <TransitionListPage

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Tooltip from '../../Tooltip.vue'
+import Tooltip from '../../Misc/Tooltip.vue'
 import FasXMark from '../../Icons/FasXMark.vue'
 import Spinner from '../../Spinners/Spinner.vue'
 import { type ValidationState } from './InputProps'

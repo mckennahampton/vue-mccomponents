@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Icon from '../Icon.vue'
+import Icon from '../Misc/Icon.vue'
 import Spinner from '../Spinners/Spinner.vue'
 
 const props = withDefaults(defineProps<{

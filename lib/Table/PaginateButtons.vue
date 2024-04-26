@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Tooltip from '../Tooltip.vue'
+import Tooltip from '../Misc/Tooltip.vue'
 import { computed, inject, type ComputedRef } from 'vue'
 import FasChevronLeft from '../Icons/FasChevronLeft.vue'
 import FasForwardStep from '../Icons/FasForwardStep.vue'

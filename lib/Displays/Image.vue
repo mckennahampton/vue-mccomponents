@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Tooltip from '../Tooltip.vue'
+import Tooltip from '../Misc/Tooltip.vue'
 import { onBeforeMount, ref } from 'vue'
 import { loadImagePreview } from '../Utilities/imageHelpers'
 

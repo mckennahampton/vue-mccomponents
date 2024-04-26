@@ -19,7 +19,7 @@ import { type ExportConfig, InternalColumn } from '../TableTypes'
 import TransitionFade from '../../Transitions/TransitionFade.vue'
 import OrderBy, { type OrderByEntry } from './Filters/OrderBy.vue'
 import TableFilters, { type Filter} from './Filters/TableFilters.vue'
-import { ref, useSlots, inject, onMounted, type ComputedRef } from 'vue'
+import { ref, useSlots, inject, onMounted, type ComputedRef, watch } from 'vue'
 import { type LengthAwarePaginator } from '../../Types/Laravel/LengthAwarePaginator'
 
 interface Props {
@@ -58,11 +58,11 @@ const deselectAll = inject('deselectAll') as Function
 
 const textFilter = ref('')
 
-const tableDatesRef = ref(null)
-const orderByRef = ref(null)
-const tableFiltersRef = ref(null)
+const tableDatesRef = ref<InstanceType<typeof TableDates> | null>(null)
+const orderByRef = ref<InstanceType<typeof OrderBy> | null>(null)
+const tableFiltersRef = ref<InstanceType<typeof TableFilters> | null>(null)
 
-const filter = () => {
+watch(textFilter, () => {
     if(textFilter.value) {
         updateQuickFilter(textFilter.value)
         emit('resetSort')
@@ -72,29 +72,24 @@ const filter = () => {
         updateQuickFilter(textFilter.value)
     }
     deselectAll()
-}
+})
 
 const resetFilter = () => {
     textFilter.value = ''
     updateQuickFilter(textFilter.value)
-    filter()
 }
 
 const resetFilters = () => {
-    //@ts-ignore
     tableDatesRef.value?.resetDates()
-    //@ts-ignore
     tableFiltersRef.value?.resetFilters()
-    //@ts-ignore
     orderByRef.value?.resetOrderBy()
 }
 
-const paginateCon = ref(null)
+const paginateCon = ref<HTMLElement | null>(null)
 const paginateHeight = ref('')
 onMounted(() => {
     if(props.paginate) {
-        //@ts-ignore
-        paginateHeight.value = paginateCon.value.offsetHeight + 'px'
+        paginateHeight.value = paginateCon.value?.offsetHeight + 'px'
     }
 })
 
@@ -127,9 +122,10 @@ const hasExportButton = (type: 'csv' | 'pdf' | 'print' | 'reportTitle') => {
                                 
                                 <!-- Quick Filter -->
                                 <Input
+                                    v-model="textFilter"
+                                    debounce
                                     :render-label="false"
                                     placeholder="Filter Visible Rows..."
-                                    v-model="textFilter"
                                     class="max-md:w-[200px] md:w-auto !border-x-0 !border-t-0 !outline-none !shadow-[none]"
                                     :class="[
                                         dark ? 'text-white' : 'text-black'

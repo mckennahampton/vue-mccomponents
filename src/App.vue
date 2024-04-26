@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Icon from '../lib/Icon.vue'
+import Icon from '../lib/Misc/Icon.vue'
 import { ref, onBeforeMount } from 'vue'
 import TableSection from './Sections/TableSection.vue'
 import InputSection from './Sections/InputSection.vue'

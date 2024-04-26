@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import uid from '../Utilities/uid'
 import { useElementBounding } from '@vueuse/core'
+import SafeTeleport from '../Misc/SafeTeleport.vue'
 import FasCaretDown from '../Icons/FasCaretDown.vue'
 import TransitionFade from '../Transitions/TransitionFade.vue'
 import { resolveXClip, resolveYClip } from '../Utilities/clipping'
@@ -383,14 +384,14 @@ const emit = defineEmits(['opened', 'closed'])
             />
         </span>
         <template v-if="props.functional && !props.disablePanel">
-            <Teleport :to="props.teleportTarget">
+            <SafeTeleport :to="props.teleportTarget" :timeout-ms="3000">
                 <TransitionFade>
                     <div
                         v-show="open"
                         :id="props.panelId"
                         ref="panel"
                         :data-panel-content="`${parentUid}_${props.instanceType}`"
-                        class="absolute z-30 flex flex-col items-stretch text-sm shadow-xl scroll-y border"
+                        class="absolute z-[1000] flex flex-col items-stretch text-sm shadow-xl scroll-y border"
                         :class="[
                             props.panelClasses,
                             {'bg-black text-white border-neutral-800': props.dark},
@@ -414,7 +415,7 @@ const emit = defineEmits(['opened', 'closed'])
                         />
                     </div>
                 </TransitionFade>
-            </Teleport>
+            </SafeTeleport>
         </template>
     </component>
 </template>
