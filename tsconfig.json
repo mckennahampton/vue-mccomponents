@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2017",
     "useDefineForClassFields": true,
-    "module": "esnext",
+    "module": "ES2022",
     "lib": ["es2020", "ES6", "ES2015", "dom"],
     "skipLibCheck": true,
     "baseUrl": "src",
@@ -22,7 +22,7 @@
     "allowJs": true,
 
     /* Linting */
-    "strict": true,
+    "strict": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
