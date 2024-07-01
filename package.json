@@ -13,7 +13,10 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build && vue-tsc --emitDeclarationOnly",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docs:dev": "vitepress dev docs --host",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs --host"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
@@ -23,6 +26,7 @@
     "@fortawesome/vue-fontawesome": "^3.0.6",
     "@vuepic/vue-datepicker": "^8.0.0",
     "@vueuse/core": "^10.6.1",
+    "axios": "^1.7.2",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.7.1",
     "vue": "^3.3.8",
@@ -36,6 +40,7 @@
     "tailwindcss": "^3.3.5",
     "typescript": "^5.2.2",
     "vite": "^5.0.0",
+    "vitepress": "^1.2.3",
     "vue-tsc": "^2.0.0"
   }
 }
